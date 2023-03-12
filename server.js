@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
 const game2048Api = require('./routes/2048');
+const itemApi = require('./routes/item');
 
 //setting
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(cookieParser());
 app.use('/auth', authApi);
 app.use('/user', userApi);
 app.use('/2048', game2048Api);
+app.use('/item', itemApi);
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {

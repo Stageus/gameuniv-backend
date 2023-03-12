@@ -5,6 +5,7 @@ const pgPool = require('../module/pgPool');
 router.post('/', loginAuth, async (req ,res) => {
     //from FE
     const score = req.body.score || 0;
+    const loginUserEmail = req.user.email;
 
     //to FE
     const result = {};
@@ -18,11 +19,8 @@ router.post('/', loginAuth, async (req ,res) => {
 
     //main
     if(statusCode === 200){
-        const pgClient = pgPool.connect();
         try{
-            await pgClient.query('BEGIN');
-
-            // 여기서부터 개발 ================================
+            
         }catch(err){
             console.log(err);
         }finally{
