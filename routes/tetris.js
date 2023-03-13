@@ -4,7 +4,8 @@ const pgPool = require('../module/pgPool');
 const scoreCoint = require('../module/scoreCoin');
 const achieve = require('../module/achieve');
 
-router.post('/', loginAuth, async (req ,res) => {
+
+router.post('/', loginAuth, async (req, res) => {
     //from FE
     const score = req.body.score || 0;
     const loginUserEmail = req.user.email;
@@ -28,15 +29,15 @@ router.post('/', loginAuth, async (req ,res) => {
             await pgClient.query('BEGIN');
 
             //INSERT score
-            const insert2048RecordSql = 'INSERT INTO game_2048_record_tb (user_email, game_score) VALUES ($1, $2)';
-            await pgClient.query(insert2048RecordSql, [loginUserEmail, score]);
+            const inserttetrisRecordSql = 'INSERT INTO game_tetris_record_tb (user_email, game_score) VALUES ($1, $2)';
+            await pgClient.query(inserttetrisRecordSql, [loginUserEmail, score]);
 
             //UPDATE coin
-            const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1, game_2048_count = game_2048_count + 1 WHERE email = $2';
+            const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1, game_tetris_count = game_tetris_count + 1 WHERE email = $2';
             await pgClient.query(updateCoinSql, [coin, loginUserEmail]);
 
             //achieve list
-            const achieveList = await achieve(loginUserEmail, score, '2048');
+            const achieveList = await achieve(loginUserEmail, score, 'tetris');
 
             //COMMIT
             await pgClient.query('COMMIT');
@@ -82,7 +83,6 @@ router.post('/', loginAuth, async (req ,res) => {
             
             await pgClient.query('ROLLBACK');
 
-            delete result.data;
             result.status = 409;
             result.message = 'unexpected error occured';
         }finally{
@@ -92,6 +92,6 @@ router.post('/', loginAuth, async (req ,res) => {
 
     //send result
     res.status(statusCode).send(result);
-});
+})
 
 module.exports = router;

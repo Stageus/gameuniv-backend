@@ -10,6 +10,7 @@ const game2048Api = require('./routes/2048');
 const itemApi = require('./routes/item');
 const universityApi = require('./routes/university');
 const achieveApi = require('./routes/achieve');
+const tetrisApi = require('./routes/tetris');
 
 //setting
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/2048', game2048Api);
 app.use('/item', itemApi);
 app.use('/university', universityApi);
 app.use('/achieve', achieveApi);
+app.use('/tetris', tetrisApi);
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {

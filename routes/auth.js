@@ -31,8 +31,6 @@ router.post('/', async (req, res) => {
     const inputId = req.body.id;
     const inputPw = req.body.pw;
     const autoLogin = req.body.autoLogin;
-
-    console.log(inputId, inputPw, autoLogin);
     
     //to FE
     const result = {};
