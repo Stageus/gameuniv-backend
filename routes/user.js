@@ -52,7 +52,7 @@ router.post('/', profileUpload, async (req, res) => {
     const inputPw = req.body.pw;
     const inputPwCheck = req.body.pwCheck;
     const universityIdx = req.body.universityIdx;
-    const profileImg = req.file.key || null;
+    const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
 
     //to FE

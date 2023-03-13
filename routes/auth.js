@@ -31,6 +31,8 @@ router.post('/', async (req, res) => {
     const inputId = req.body.id;
     const inputPw = req.body.pw;
     const autoLogin = req.body.autoLogin;
+
+    console.log(inputId, inputPw, autoLogin);
     
     //to FE
     const result = {};
@@ -129,8 +131,8 @@ router.post('/email/number', async (req, res) => {
     //main
     if(statusCode === 200){
         try{
-            const selectUserSql = 'SELECT email FROM user_tb WHERE email = $1';
-            const selectUserResult = await pgPool.query(selectUserSql, [email]);
+            //const selectUserSql = 'SELECT email FROM user_tb WHERE email = $1';
+            //const selectUserResult = await pgPool.query(selectUserSql, [email]);
 
             const selectUniSql = 'SELECT university_address_name FROM university_tb JOIN university_address_tb ON university_tb.university_idx = university_address_tb.university_idx WHERE university_name = $1';
             const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
