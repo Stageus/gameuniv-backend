@@ -155,6 +155,10 @@ router.post('/email/number', async (req, res) => {
             
             statusCode = 409;
             result.message = 'unexpected error occured';
+        }finally{
+            if(redis.isOpen){
+                await redis.disconnect();
+            }
         }
     }
 

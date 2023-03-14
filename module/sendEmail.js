@@ -18,7 +18,7 @@ module.exports =  (email, contents, subject = '인증번호') => {
             to : email,
             subject : `gameuniv ${subject}`,
             html : `<h1>${contents}</h1>`
-        }
+        };
 
         transport.sendMail(mailOption, (err, info) => {
             if(err){
@@ -26,6 +26,6 @@ module.exports =  (email, contents, subject = '인증번호') => {
             }else{
                 resolve(info);
             }
-        })
+        });
     })
 }

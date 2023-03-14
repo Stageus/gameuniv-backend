@@ -1,8 +1,11 @@
 const express = require('express');
 const app = express();
+const https = require('https');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -14,10 +17,16 @@ const tetrisApi = require('./routes/tetris');
 
 //setting
 dotenv.config();
+const options = { 
+    ca: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/fullchain.pem'),
+    key: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem')
+};
 
 //middleware
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({
     origin : ['http://gameuniv.site', 'http://localhost:3000'],
     credentials : true
@@ -34,5 +43,9 @@ app.use('/tetris', tetrisApi);
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
+    console.log(`server on port : ${process.env.HTTP_PORT}`);
+});
+
+https.createServer(options, app).listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
     console.log(`server on port : ${process.env.HTTP_PORT}`);
 });
