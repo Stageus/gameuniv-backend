@@ -4,6 +4,119 @@ const pgPool = require('../module/pgPool');
 const scoreCoint = require('../module/scoreCoin');
 const achieve = require('../module/achieve');
 
+router.get('/record/all', loginAuth, async (req, res) => {
+    //from FE
+    const offset = req.query.offset || 0;
+
+    //to FE
+    const result = {};
+    let statusCode = 200;
+
+    //validaion check
+    if(offset < 0){
+        statusCode = 400;
+        result.message = 'invalid offset';
+    }
+
+    //main
+    if(statusCode === 200){
+        try{
+            //SELECT rank
+            const selectRankSql = `SELECT  
+                                        rank_tb.max_score AS max_score,
+                                        user_tb.id AS id,
+                                        profile_img AS profile_img,
+                                        university_name
+                                    FROM
+                                        (
+                                            SELECT
+                                                MAX(game_score) AS max_score,
+                                                user_email AS user_email
+                                            FROM
+                                                game_tetris_record_tb
+                                            WHERE
+                                                EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
+                                            AND
+                                                EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                            GROUP BY
+                                                user_email
+                                            ORDER BY
+                                                MAX(game_score) DESC
+                                            LIMIT
+                                                100
+                                            OFFSET
+                                                $1
+                                        ) AS rank_tb
+                                    JOIN
+                                        user_tb
+                                    ON
+                                        user_tb.email = rank_tb.user_email
+                                    JOIN
+                                        university_tb
+                                    ON
+                                        user_tb.university_idx = university_tb.university_idx
+                                    `;
+            const selectRankResult = await pgPool.query(selectRankSql, [offset]);
+
+            result.data = selectRankResult.rows;
+        }catch(err){
+            console.log(err);
+
+            result.message = 'unexpected error occured';
+            statusCode = 409;
+        }
+    }
+
+    //send result
+    res.status(statusCode).send(result);
+});
+
+router.get('/record/:email', loginAuth, async (req, res) => {
+    //from FE
+    const userEmail = req.params.email;
+
+    //to FE
+    const result = {};
+    let statusCode = 200;
+
+    //main
+    try{
+        const selectRankSql = `SELECT 
+                                    rank,
+                                    max_score
+                                FROM
+                                    (
+                                        SELECT 
+                                            RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank,
+                                            MAX(game_score) AS max_score,
+                                            user_email AS user_email
+                                        FROM
+                                            game_tetris_record_tb
+                                        WHERE
+                                            EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
+                                        AND
+                                            EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                        GROUP BY
+                                            user_email
+                                    ) AS rank_tb
+                                WHERE
+                                    user_email = $1
+                                `;
+        const selectRankResult = await pgPool.query(selectRankSql, [userEmail]);
+
+        result.data = selectRankResult.rows[0] || {
+            rank : -2
+        };
+    }catch(err){
+        console.log(err);
+
+        result.message = 'unexpected error occured';
+        statusCode = 409;
+    }
+    
+    //send result
+    res.status(statusCode).send(result);
+});
 
 router.post('/score', loginAuth, async (req, res) => {
     //from FE
@@ -36,21 +149,25 @@ router.post('/score', loginAuth, async (req, res) => {
             const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1, game_tetris_count = game_tetris_count + 1 WHERE email = $2';
             await pgClient.query(updateCoinSql, [coin, loginUserEmail]);
 
-            //achieve list
-            const achieveList = await achieve(loginUserEmail, score, 'tetris');
-
             //COMMIT
             await pgClient.query('COMMIT');
 
+            //achieve list
+            const achieveList = await achieve(loginUserEmail, score, 'tetris');
+
             //SELECT rank
-            const selectRankSql = `SELECT 
+            const selectRankSql = `SELECT
                                         RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
                                     FROM
                                         game_tetris_record_tb
                                     WHERE
-                                        game_score > $1
+                                        EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
+                                    AND
+                                        EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
                                     GROUP BY
                                         user_email
+                                    HAVING
+                                        MAX(game_score) > $1
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
             result.data.rank = parseInt(selectRankResult.rows?.[0]?.rank || 0) + 1;
@@ -128,6 +245,10 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         university_tb
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
+                                    WHERE
+                                        EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
+                                    AND
+                                        EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
                                     GROUP BY
                                         user_email
                                     HAVING
@@ -152,6 +273,10 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         university_tb
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
+                                    WHERE
+                                        EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
+                                    AND
+                                        EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
                                     GROUP BY
                                         user_email
                                     HAVING
@@ -166,6 +291,10 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
                                     FROM
                                         game_tetris_record_tb
+                                    WHERE
+                                        EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
+                                    AND
+                                        EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
                                     GROUP BY
                                         user_email
                                     HAVING

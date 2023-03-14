@@ -34,6 +34,7 @@ const uploadMulter = multer({
 
 module.exports = async (req, res, next) => {
     uploadMulter.single('profileImg')(req, res, (err) => {
+        console.log(req.body);
         if(err){
             console.log(err);
 

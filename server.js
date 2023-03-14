@@ -47,5 +47,5 @@ app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
 });
 
 https.createServer(options, app).listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
-    console.log(`server on port : ${process.env.HTTP_PORT}`);
+    console.log(`server on port : ${process.env.HTTPS_PORT}`);
 });

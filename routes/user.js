@@ -55,6 +55,9 @@ router.post('/', profileUpload, async (req, res) => {
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
 
+    console.log('body 데이터');
+    console.log(req.body);
+
     //to FE
     const result = {};
     let statusCode = 200;
@@ -82,6 +85,8 @@ router.post('/', profileUpload, async (req, res) => {
     try{
         //email auth check
         await redis.connect();
+
+        console.log(`certified-${inputEmail}`);
 
         const authState = await redis.get(`certified-${req.body.email}`);
 
@@ -116,6 +121,8 @@ router.post('/', profileUpload, async (req, res) => {
         await redis.disconnect();
     }catch(err){
         console.log(err);
+        
+        result.err = err;
 
         if(err.code === '23502'){
             statusCode = 400;
