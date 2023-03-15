@@ -38,10 +38,17 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                                 EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                             AND
                                                 EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                            AND
+                                                (
+                                                    SELECT 
+                                                        is_delete 
+                                                    FROM 
+                                                        user_tb 
+                                                    WHERE 
+                                                        email = game_tetris_record_tb.user_email 
+                                                ) IS NULL
                                             GROUP BY
                                                 user_email
-                                            ORDER BY
-                                                MAX(game_score) DESC
                                             LIMIT
                                                 100
                                             OFFSET
@@ -55,6 +62,8 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                         university_tb
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
+                                    ORDER BY
+                                        max_score DESC
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [offset]);
 
@@ -96,6 +105,15 @@ router.get('/record/:email', loginAuth, async (req, res) => {
                                             EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                         AND
                                             EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                        AND
+                                            (
+                                                SELECT
+                                                    is_delete
+                                                FROM
+                                                    user_tb
+                                                WHERE
+                                                    email = game_tetris_record_tb.user_email
+                                            ) IS NULL
                                         GROUP BY
                                             user_email
                                     ) AS rank_tb
@@ -164,13 +182,27 @@ router.post('/score', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        (
+                                            SELECT
+                                                is_delete
+                                            FROM
+                                                user_tb
+                                            WHERE
+                                                game_tetris_record_tb.user_email = user_tb.email
+                                        ) IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
                                         MAX(game_score) > $1
+                                    LIMIT
+                                        101
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
             result.data.rank = parseInt(selectRankResult.rows?.[0]?.rank || 0) + 1;
+            if(result.data.rank >= 101){
+                result.data.rank = -1;
+            }
             result.data.coin = coin;
 
             //insert achieve
@@ -249,10 +281,14 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        user_tb.is_delete IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
                                         MAX(game_score) < $1
+                                    ORDER BY
+                                        MAX(game_score) DESC
                                     LIMIT
                                         1
                                     `;
@@ -277,10 +313,14 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        user_tb.is_delete IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
                                         MAX(game_score) > $1
+                                    ORDER BY
+                                        MAX(game_score) ASC
                                     LIMIT
                                         1
                                     `;
@@ -295,20 +335,32 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        (
+                                            SELECT
+                                                is_delete
+                                            FROM
+                                                user_tb
+                                            WHERE
+                                                game_tetris_record_tb.user_email = user_tb.email
+                                        ) IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
-                                        MAX(game_score) > $1
+                                        MAX(game_score) >= $1
+                                    LIMIT
+                                        101
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
 
             result.data = {
                 ...selectPreResult.rows?.[0],
                 ...selectNextResult.rows?.[0],
-                rank : parseInt(selectRankResult.rows?.[0]?.rank || 0) + 1
+                rank : parseInt(selectRankResult.rows.length || 0) + 1
             }
-
-            console.log(selectRankResult.rows);
+            if(result.data > 100){
+                result.data = -1;
+            }
         }catch(err){
             console.log(err);
 

@@ -38,10 +38,17 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                                 EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                             AND
                                                 EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                            AND
+                                                (
+                                                    SELECT 
+                                                        is_delete 
+                                                    FROM 
+                                                        user_tb 
+                                                    WHERE 
+                                                        email = game_2048_record_tb.user_email 
+                                                ) IS NULL
                                             GROUP BY
                                                 user_email
-                                            ORDER BY
-                                                MAX(game_score) DESC
                                             LIMIT
                                                 100
                                             OFFSET
@@ -55,6 +62,8 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                         university_tb
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
+                                    ORDER BY
+                                        max_score DESC
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [offset]);
 
@@ -96,6 +105,15 @@ router.get('/record/:email', loginAuth, async (req, res) => {
                                             EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                         AND
                                             EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                        AND
+                                            (
+                                                SELECT
+                                                    is_delete
+                                                FROM
+                                                    user_tb
+                                                WHERE
+                                                    email = game_2048_record_tb.user_email
+                                            ) IS NULL
                                         GROUP BY
                                             user_email
                                     ) AS rank_tb
@@ -164,13 +182,27 @@ router.post('/score', loginAuth, async (req ,res) => {
                                         EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        (
+                                            SELECT
+                                                is_delete
+                                            FROM
+                                                user_tb
+                                            WHERE
+                                                game_2048_record_tb.user_email = user_tb.email
+                                        ) IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
-                                        MAX(game_score) > $1
+                                        MAX(game_score) >= $1
+                                    LIMIT
+                                        101
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
-            result.data.rank = parseInt(selectRankResult.rows?.[0]?.rank || 0) + 1;
+            result.data.rank = parseInt(selectRankResult.rows.length || 0) + 1;
+            if(result.data.rank >= 101){
+                result.data.rank = -1;
+            }
             result.data.coin = coin;
 
             //insert achieve
@@ -217,7 +249,7 @@ router.post('/score', loginAuth, async (req ,res) => {
 router.get('/score/rank', loginAuth, async (req, res) => {
     //from FE
     const score = parseInt(req.query.score) || 0;
-    
+
     //to FE
     const result = {};
     let statusCode = 200;
@@ -231,7 +263,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //main
     if(statusCode === 200){
         try{
-            //SELECT
+            //SELECT pre
             const selectPreSql = `SELECT
                                         MAX(id) AS pre_id,
                                         MAX(university_name) AS pre_university_name,
@@ -250,16 +282,20 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        user_tb.is_delete IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
                                         MAX(game_score) < $1
+                                    ORDER BY
+                                        MAX(game_score) DESC
                                     LIMIT
                                         1
                                     `;
             const selectPreResult = await pgPool.query(selectPreSql, [score]);
 
-            //SELECT
+            //SELECT next
             const selectNextSql = `SELECT
                                         MAX(id) AS next_id,
                                         MAX(university_name) AS next_university_name,
@@ -278,10 +314,14 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        user_tb.is_delete IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
                                         MAX(game_score) > $1
+                                    ORDER BY
+                                        MAX(game_score) ASC
                                     LIMIT
                                         1
                                     `;
@@ -296,20 +336,32 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
                                     AND
                                         EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                    AND
+                                        (
+                                            SELECT
+                                                is_delete
+                                            FROM
+                                                user_tb
+                                            WHERE
+                                                game_2048_record_tb.user_email = user_tb.email
+                                        ) IS NULL
                                     GROUP BY
                                         user_email
                                     HAVING
-                                        MAX(game_score) > $1
+                                        MAX(game_score) >= $1
+                                    LIMIT
+                                        101
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
 
             result.data = {
                 ...selectPreResult.rows?.[0],
                 ...selectNextResult.rows?.[0],
-                rank : parseInt(selectRankResult.rows?.[0]?.rank || 0) + 1
+                rank : parseInt(selectRankResult.rows.length || 0) + 1
             }
-
-            console.log(selectRankResult.rows);
+            if(result.data > 100){
+                result.data = -1;
+            }
         }catch(err){
             console.log(err);
 

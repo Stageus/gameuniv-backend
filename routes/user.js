@@ -182,7 +182,7 @@ router.get('/id', async (req, res) => {
 
 router.put('/profile-img', loginAuth, profileUpload, async (req, res) => {
     //from FE
-    const profileImg = req.file.key || null;
+    const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
 
     //to FE
