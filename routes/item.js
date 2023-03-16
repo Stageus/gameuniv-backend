@@ -230,6 +230,8 @@ router.post('/pick', loginAuth, async (req, res) => {
     const inputItemIdx = req.body.itemIdx || -1;
     const loginUserEmail = req.user.email;
 
+    console.log(`POST /item/pick api || item idx = ${inputItemIdx}`);
+
     //to FE
     const result = {};
     let statusCode = 200;

@@ -52,7 +52,7 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                             LIMIT
                                                 100
                                             OFFSET
-                                                $1
+                                                $1 * 100
                                         ) AS rank_tb
                                     JOIN
                                         user_tb

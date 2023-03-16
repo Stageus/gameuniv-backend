@@ -27,6 +27,7 @@ router.get('/all', loginAuth, async (req, res) => {
                                         achieve_reward_name AS reward_name,
                                         achieve_reward_img AS reward_img,
                                         achieve_reward_coin AS reward_coin,
+                                        progress_rate_string AS achieve_progress_name,
                                         (
                                             SELECT
                                                 user_achieve_idx
@@ -41,6 +42,8 @@ router.get('/all', loginAuth, async (req, res) => {
                                         achieve_tb
                                     WHERE
                                         game_type = $1
+                                    ORDER BY
+                                        achieve_idx ASC
                                 `;
             const selectAchResult = await pgPool.query(selectAchSql, [gameType, loginUserEmail]);
 

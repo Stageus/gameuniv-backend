@@ -38,23 +38,47 @@ router.post('/', async (req, res) => {
 
     //main
     try{
-        const selectUserSql = 'SELECT email, id, profile_img, user_name, university_name, authority FROM user_tb JOIN university_tb ON user_tb.university_idx = university_tb.university_idx WHERE id = $1 AND pw = $2 AND is_delete IS NULL';
+        const selectUserSql = `SELECT 
+                                    email, 
+                                    id, 
+                                    profile_img, 
+                                    user_name, 
+                                    university_name, 
+                                    authority,
+                                    block_state,
+                                    is_delete
+                                FROM 
+                                    user_tb 
+                                JOIN
+                                    university_tb 
+                                ON 
+                                    user_tb.university_idx = university_tb.university_idx 
+                                WHERE 
+                                    id = $1 
+                                AND 
+                                    pw = $2
+                                `;
         const selectUserResult = await pgPool.query(selectUserSql, [inputId, pwHash(inputPw)]);
 
-        if(selectUserResult.rows.length !== 0){
-            const token = makeToken({
-                email : selectUserResult.rows[0].email,
-                id : selectUserResult.rows[0].id,
-                profileImg : selectUserResult.rows[0].profile_img,
-                name : selectUserResult.rows[0].user_name,
-                universityName : selectUserResult.rows[0].university_name,
-                authority : selectUserResult.rows[0].authority
-            }, autoLogin ? '48h' : '1h');
-
-            res.cookie('token', token, cookieConfig);
+        if(selectUserResult.rows[0].block_state === null){
+            if(selectUserResult.rows[0].is_delete === null){
+                const token = makeToken({
+                    email : selectUserResult.rows[0].email,
+                    id : selectUserResult.rows[0].id,
+                    profileImg : selectUserResult.rows[0].profile_img,
+                    name : selectUserResult.rows[0].user_name,
+                    universityName : selectUserResult.rows[0].university_name,
+                    authority : selectUserResult.rows[0].authority
+                }, autoLogin ? '48h' : '1h');
+    
+                res.cookie('token', token, cookieConfig);
+            }else{
+                statusCode = 400;
+                result.message = 'invalid id or pw';
+            }   
         }else{
-            statusCode = 400;
-            result.message = 'invalid id or pw';
+            statusCode = 403;
+            result.message = 'block user';
         }
     }catch(err){
         console.log(err);
@@ -129,26 +153,31 @@ router.post('/email/number', async (req, res) => {
     //main
     if(statusCode === 200){
         try{
-            //const selectUserSql = 'SELECT email FROM user_tb WHERE email = $1';
-            //const selectUserResult = await pgPool.query(selectUserSql, [email]);
+            const selectUserSql = 'SELECT block_state FROM user_tb WHERE email = $1';
+            const selectUserResult = await pgPool.query(selectUserSql, [email]);
 
-            const selectUniSql = 'SELECT university_address_name FROM university_tb JOIN university_address_tb ON university_tb.university_idx = university_address_tb.university_idx WHERE university_name = $1';
-            const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
-    
-            if(selectUniResult.rows.map(data => data.university_address_name).includes(email.split('@')[1])){
-                await redis.connect();
-                
-                const randomNumber = makeRandomNumber(6);
+            if(!selectUserResult.rows?.[0]?.block_state){
+                const selectUniSql = 'SELECT university_address_name FROM university_tb JOIN university_address_tb ON university_tb.university_idx = university_address_tb.university_idx WHERE university_name = $1';
+                const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
+        
+                if(selectUniResult.rows.map(data => data.university_address_name).includes(email.split('@')[1])){
+                    await redis.connect();
+                    
+                    const randomNumber = makeRandomNumber(6);
 
-                await redis.set(`${email}-auth-number`, randomNumber);
-                await redis.expire(`${email}-auth-number`, 60 * 3);
+                    await redis.set(`${email}-auth-number`, randomNumber);
+                    await redis.expire(`${email}-auth-number`, 60 * 3);
 
-                await sendEmail(email, randomNumber);
+                    await sendEmail(email, randomNumber);
 
-                await redis.disconnect();
+                    await redis.disconnect();
+                }else{
+                    statusCode = 404;
+                    result.message = 'invalid email domain';
+                }
             }else{
                 statusCode = 403;
-                result.message = 'invalid email domain';
+                result.message = 'block user';
             }
         }catch(err){
             console.log(err);

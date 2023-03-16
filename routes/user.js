@@ -44,6 +44,31 @@ router.get('/id/duplication', async (req ,res) => {
     res.status(statusCode).send(result);
 });
 
+router.get('/coin', loginAuth, async (req, res) => {
+    //from FE
+    const loginUserEmail = req.user.email;
+
+    //to FE
+    const result = {};
+    let statusCode = 200;
+
+    //main
+    try{
+        const selectCoinSql = 'SELECT coin FROM user_tb WHERE email = $1';
+        const selectCoinResult = await pgPool.query(selectCoinSql, [loginUserEmail]);
+
+        result.data = selectCoinResult.rows[0];
+    }catch(err){
+        console.log(err);
+
+        result.message = 'unexpected error occured';
+        statusCode = 409;
+    }
+
+    //send result
+    res.status(statusCode).send(result);
+}); 
+
 router.post('/', profileUpload, async (req, res) => {
     //from FE
     const inputEmail = req.body.email;
@@ -54,9 +79,6 @@ router.post('/', profileUpload, async (req, res) => {
     const universityIdx = req.body.universityIdx;
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
-
-    console.log('body 데이터');
-    console.log(req.body);
 
     //to FE
     const result = {};
@@ -85,8 +107,6 @@ router.post('/', profileUpload, async (req, res) => {
     try{
         //email auth check
         await redis.connect();
-
-        console.log(`certified-${inputEmail}`);
 
         const authState = await redis.get(`certified-${req.body.email}`);
 
@@ -184,6 +204,8 @@ router.put('/profile-img', loginAuth, profileUpload, async (req, res) => {
     //from FE
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
+
+    console.log(profileImg, defaultImg);
 
     //to FE
     const result = {};

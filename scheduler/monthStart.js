@@ -67,6 +67,8 @@ setTimeout(() => {
     callback();
 }, timeDiff);
 
+console.log(timeDiff / 1000 / 60 / 60 / 24);
+
 const monthFirstFunc = () => {
     return new Promise(async (resolve, reject) => {
         try{
@@ -86,6 +88,15 @@ const monthFirstFunc = () => {
                                                     EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                                 AND
                                                     EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                                AND
+                                                    (
+                                                        SELECT
+                                                            is_delete
+                                                        FROM
+                                                            user_tb
+                                                        WHERE
+                                                            user_tb.email = game_tetris_record_tb.user_email
+                                                    ) IS NULL
                                                 GROUP BY
                                                     user_email
                                                 ORDER BY
@@ -95,6 +106,7 @@ const monthFirstFunc = () => {
                                             ) AS rank_tb
                                         `;
             const selectTetrisRankResult = await pgClient.query(selectTetrisRankSql);
+
             for(const i in selectTetrisRankResult.rows){
                 const userData = selectTetrisRankResult.rows[i];
 
@@ -148,6 +160,15 @@ const monthFirstFunc = () => {
                                                     EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
                                                 AND
                                                     EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                                AND
+                                                    (
+                                                        SELECT
+                                                            is_delete
+                                                        FROM
+                                                            user_tb
+                                                        WHERE
+                                                            user_tb.email = game_2048_record_tb.user_email
+                                                    ) IS NULL
                                                 GROUP BY
                                                     user_email
                                                 ORDER BY
@@ -157,6 +178,7 @@ const monthFirstFunc = () => {
                                             ) AS rank_tb
                                         `;
             const select2048RankResult = await pgClient.query(select2048RankSql);
+
             for(const i in select2048RankResult.rows){
                 const userData = select2048RankResult.rows[i];
 

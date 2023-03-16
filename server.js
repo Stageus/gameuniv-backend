@@ -14,6 +14,8 @@ const itemApi = require('./routes/item');
 const universityApi = require('./routes/university');
 const achieveApi = require('./routes/achieve');
 const tetrisApi = require('./routes/tetris');
+const blockApi = require('./routes/block');
+const adminApi = require('./routes/admin');
 
 //setting
 dotenv.config();
@@ -40,6 +42,8 @@ app.use('/item', itemApi);
 app.use('/university', universityApi);
 app.use('/achieve', achieveApi);
 app.use('/tetris', tetrisApi);
+app.use('/block', blockApi);
+app.use('/admin', adminApi);
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
