@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const logging = require('./middleware/logging');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -29,6 +30,7 @@ const options = {
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(logging());
 app.use(cors({
     origin : ['http://gameuniv.site', 'http://localhost:3000'],
     credentials : true

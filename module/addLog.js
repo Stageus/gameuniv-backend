@@ -1,5 +1,27 @@
+const mongodb = require('mongodb').MongoClient;
+const verifyToken = require('../module/verifyToken');
+const url = require('url');
+
 module.exports = (req, res, result) => {
     return new Promise(async (resolve, reject) => {
-        
+        const urlObj = url.parse(req.originalUrl);
+
+        try{
+            const DB = await mongodb.connect("mongodb://localhost:27017");
+            await DB.db('gameuniv').collection("log").insertOne({
+                ip : req.ip, // user ip
+                req_channel_email : verifyToken(req.cookies.token)?.data?.email || '', // user email
+                method : req.method, // req method
+                api_path : urlObj.pathname, // api path
+                querystring : urlObj.query, // req query
+                req_time : req.date || null, // req time
+                res_time : new Date(), // res time
+                status_code : res.statusCode || 409, // status code
+                result : JSON.stringify(result || {}) // result obj
+            });
+            DB.close();
+        }catch(err){
+            console.log(err);
+        }
     });
 }
