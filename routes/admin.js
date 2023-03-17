@@ -13,6 +13,8 @@ router.get('/', adminAuth, (req, res) => {
 router.get('/user/all', adminAuth, async (req, res) => {
     //from FE
     const offset = req.query.offset || 0;
+    const searchType = req.query['search-type'];
+    const search = req.query.search;
 
     //to FE
     const result = {};

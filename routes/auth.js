@@ -60,8 +60,8 @@ router.post('/', async (req, res) => {
                                 `;
         const selectUserResult = await pgPool.query(selectUserSql, [inputId, pwHash(inputPw)]);
 
-        if(selectUserResult.rows[0].block_state === null){
-            if(selectUserResult.rows[0].is_delete === null){
+        if(selectUserResult.rows[0]?.is_delete === null){
+            if(selectUserResult.rows[0].block_state === null){
                 const token = makeToken({
                     email : selectUserResult.rows[0].email,
                     id : selectUserResult.rows[0].id,
@@ -73,12 +73,12 @@ router.post('/', async (req, res) => {
     
                 res.cookie('token', token, cookieConfig);
             }else{
-                statusCode = 400;
-                result.message = 'invalid id or pw';
-            }   
+                statusCode = 403;
+                result.message = 'block user';
+            }
         }else{
-            statusCode = 403;
-            result.message = 'block user';
+            statusCode = 400;
+            result.message = 'invalid id or pw';
         }
     }catch(err){
         console.log(err);

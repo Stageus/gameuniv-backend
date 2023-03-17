@@ -16,13 +16,17 @@ const addUserItem = async () => {
     if(response.status === 200){
         const result = await response.json();
 
-        document.querySelector('.user_container').innerHTML = '';
+        if(result.data.length === 0){
+            alert('다음 데이터가 없습니다.');
+        }else{
+            document.querySelector('.user_container').innerHTML = '';
 
-        result.data.forEach((userData) => {
-            const userItem = makeUserItem(userData);
+            result.data.forEach((userData) => {
+                const userItem = makeUserItem(userData);
 
-            document.querySelector('.user_container').append(userItem);
-        });
+                document.querySelector('.user_container').append(userItem);
+            });
+        }   
     }
 }
 

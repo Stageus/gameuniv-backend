@@ -29,7 +29,7 @@ const options = {
 //middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'gameuniv-react', 'build')));
 app.use(logging());
 app.use(cors({
     origin : ['http://gameuniv.site', 'http://localhost:3000'],
@@ -46,6 +46,11 @@ app.use('/achieve', achieveApi);
 app.use('/tetris', tetrisApi);
 app.use('/block', blockApi);
 app.use('/admin', adminApi);
+
+//serve FILE
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'gameuniv-react', 'build', 'index.html')); 
+});
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
