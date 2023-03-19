@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const logging = require('./middleware/logging');
 const rateLimit = require('./middleware/rateLimit');
+const redis = require('./module/redisClient');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -26,6 +27,7 @@ const options = {
     key: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/privkey.pem'),
     cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem')
 };
+redis.connect();
 
 //middleware
 app.use(express.json());

@@ -3,6 +3,7 @@ const loginAuth = require('../middleware/loginAuth');
 const pgPool = require('../module/pgPool');
 const scoreCoint = require('../module/scoreCoin');
 const achieve = require('../module/achieve');
+const redis = require('../module/redisClient');
 
 router.get('/record/all', loginAuth, async (req, res) => {
     //from FE
@@ -151,6 +152,16 @@ router.post('/score', loginAuth, async (req ,res) => {
         statusCode = 400;
         result.message = 'invalid score';
     }
+    try{
+        const curScore = await redis.get(`2048_score_${loginUserEmail}`);
+
+        if(curScore != score){
+            statusCode = 409;
+            result.message = 'score error';
+        }
+    }catch(err){
+        console.log(err);
+    }
 
     //main
     if(statusCode === 200){
@@ -249,6 +260,7 @@ router.post('/score', loginAuth, async (req ,res) => {
 router.get('/score/rank', loginAuth, async (req, res) => {
     //from FE
     const score = parseInt(req.query.score) || 0;
+    const loginUserEmail = req.user.email;
 
     //to FE
     const result = {};
@@ -354,6 +366,9 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
 
+            await redis.set(`2048_score_${loginUserEmail}`, score);
+            await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);
+
             result.data = {
                 ...selectPreResult.rows?.[0],
                 ...selectNextResult.rows?.[0],
@@ -371,6 +386,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     }
 
     //send result
+    //console.log(statusCode);
     res.status(statusCode).send(result);
 });
 

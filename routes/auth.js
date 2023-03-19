@@ -103,8 +103,6 @@ router.get('/email/number', async (req, res) => {
     //main
     if(statusCode === 200){
         try{
-            await redis.connect();
-    
             const authNumber = await redis.get(`${email}-auth-number`);
             
             if(!authNumber){
@@ -117,8 +115,6 @@ router.get('/email/number', async (req, res) => {
                 await redis.set(`certified-${email}`, 1);
                 await redis.expire(`certified-${email}`, 60 * 30);
             }
-    
-            await redis.disconnect();
         }catch(err){    
             console.log(err);
     
@@ -161,16 +157,12 @@ router.post('/email/number', async (req, res) => {
                 const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
         
                 if(selectUniResult.rows.map(data => data.university_address_name).includes(email.split('@')[1])){
-                    await redis.connect();
-                    
                     const randomNumber = makeRandomNumber(6);
 
                     await redis.set(`${email}-auth-number`, randomNumber);
                     await redis.expire(`${email}-auth-number`, 60 * 3);
 
                     await sendEmail(email, randomNumber);
-
-                    await redis.disconnect();
                 }else{
                     statusCode = 404;
                     result.message = 'invalid email domain';
@@ -184,10 +176,6 @@ router.post('/email/number', async (req, res) => {
             
             statusCode = 409;
             result.message = 'unexpected error occured';
-        }finally{
-            if(redis.isOpen){
-                await redis.disconnect();
-            }
         }
     }
 

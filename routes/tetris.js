@@ -3,6 +3,7 @@ const loginAuth = require('../middleware/loginAuth');
 const pgPool = require('../module/pgPool');
 const scoreCoint = require('../module/scoreCoin');
 const achieve = require('../module/achieve');
+const redis = require('../module/redisClient');
 
 router.get('/record/all', loginAuth, async (req, res) => {
     //from FE
@@ -151,6 +152,16 @@ router.post('/score', loginAuth, async (req, res) => {
         statusCode = 400;
         result.message = 'invalid score';
     }
+    try{
+        const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
+
+        if(curScore != score){
+            statusCode = 409;
+            result.message = 'score error';
+        }
+    }catch(err){
+        console.log(err);
+    }
 
     //main
     if(statusCode === 200){
@@ -262,7 +273,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //main
     if(statusCode === 200){
         try{
-            //SELECT
+            //SELECT pre
             const selectPreSql = `SELECT
                                         MAX(id) AS pre_id,
                                         MAX(university_name) AS pre_university_name,
@@ -294,7 +305,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                     `;
             const selectPreResult = await pgPool.query(selectPreSql, [score]);
 
-            //SELECT
+            //SELECT next
             const selectNextSql = `SELECT
                                         MAX(id) AS next_id,
                                         MAX(university_name) AS next_university_name,
@@ -352,6 +363,9 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         101
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
+
+            await redis.set(`tetris_score_${loginUserEmail}`, score);
+            await redis.expire(`tetris_score_${loginUserEmail}`, 60 * 30);
 
             result.data = {
                 ...selectPreResult.rows?.[0],
