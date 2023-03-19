@@ -172,7 +172,6 @@ router.post('/buy', loginAuth, async (req, res) => {
                                         item_idx = $1
                                     `;
             const selectItemResult = await pgPool.query(selectItemSql, [itemIdx, loginUserEmail]);
-            console.log(selectItemResult.rows);
 
             if(selectItemResult.rows.length > 0){
                 if(selectItemResult.rows[0].own_state === false){
@@ -229,8 +228,6 @@ router.post('/pick', loginAuth, async (req, res) => {
     //from FE
     const inputItemIdx = req.body.itemIdx || -1;
     const loginUserEmail = req.user.email;
-
-    console.log(`POST /item/pick api || item idx = ${inputItemIdx}`);
 
     //to FE
     const result = {};

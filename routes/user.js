@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const profileUpload = require('../middleware/profileUpload');
-const redis = require('redis').createClient();
+const redis = require('../module/redisClient');
 const { userNameRegExp, userEmailRegExp, userPwRegExp, userIdRegExp } = require('../module/regExp');
 const pwHash = require('../module/pwHash');
 const pgPool = require('../module/pgPool');
@@ -80,6 +80,8 @@ router.post('/', profileUpload, async (req, res) => {
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
 
+    console.log(inputEmail, inputId, inputName, universityIdx);
+
     //to FE
     const result = {};
     let statusCode = 200;
@@ -105,9 +107,6 @@ router.post('/', profileUpload, async (req, res) => {
 
     //main
     try{
-        //email auth check
-        await redis.connect();
-
         const authState = await redis.get(`certified-${req.body.email}`);
 
         if(authState){
@@ -137,8 +136,6 @@ router.post('/', profileUpload, async (req, res) => {
             statusCode = 403;
             result.message = 'no email auth';
         }   
-
-        await redis.disconnect();
     }catch(err){
         console.log(err);
         
@@ -150,10 +147,6 @@ router.post('/', profileUpload, async (req, res) => {
         }else{
             statusCode = 409;
             result.message = 'unexpected error occured';
-        }
-    }finally{
-        if(redis.isOpen){
-            await redis.disconnect();
         }
     }
 
@@ -258,8 +251,6 @@ router.put('/pw', async (req, res) => {
             const selectEmailResult = await pgPool.query(selectEmailSql, [inputEmail]);
 
             if(selectEmailResult.rows.length !== 0){
-                await redis.connect();
-
                 const authState = await redis.get(`certified-${inputEmail}`);
 
                 if(authState){
@@ -272,18 +263,12 @@ router.put('/pw', async (req, res) => {
                     statusCode = 403;
                     result.message = 'no certified email';
                 }
-
-                await redis.disconnect();
             }else{
                 statusCode = 401;
                 result.message = 'email does not exist';
             }
         }catch(err){
             console.log(err);
-
-            if(redis.isOpen){
-                await redis.disconnect();
-            }
     
             result.message = 'unexpected error occured';
             statusCode = 409;
