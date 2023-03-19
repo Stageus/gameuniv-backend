@@ -7,6 +7,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const logging = require('./middleware/logging');
+const rateLimit = require('./middleware/rateLimit');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -31,6 +32,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'gameuniv-react', 'build')));
 app.use(logging());
+app.use(rateLimit);
 app.use(cors({
     origin : ['http://gameuniv.site', 'http://localhost:3000'],
     credentials : true

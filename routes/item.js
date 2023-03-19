@@ -196,7 +196,7 @@ router.post('/buy', loginAuth, async (req, res) => {
                             await pgClient.query(insertCointSql, [itemIdx, loginUserEmail]);
     
                             //COMMIT
-                            //await pgClient.query('COMMIT');
+                            await pgClient.query('COMMIT');
     
                             await pgClient.end();
                         }

@@ -200,7 +200,7 @@ router.get('/id', async (req, res) => {
     res.status(statusCode).send(result);
 });
 
-router.put('/profile-img', loginAuth, profileUpload, async (req, res) => {
+router.post('/profile-img', loginAuth, profileUpload, async (req, res) => {
     //from FE
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
@@ -211,15 +211,23 @@ router.put('/profile-img', loginAuth, profileUpload, async (req, res) => {
     const result = {};
     let statusCode = 200;
 
-    //main
-    try{
-        const updateUserSql = 'UPDATE user_tb SET profile_img = $1 WHERE email = $2';
-        await pgPool.query(updateUserSql, [profileImg || defaultImg, req.user.email]);
-    }catch(err){    
-        console.log(err);
+    //validaion check
+    if(profileImg === null && defaultImg === null){
+        statusCode = 400;
+        result.message = 'no image';
+    }
 
-        statusCode = 409;
-        result.message = 'unexpected error occured';
+    //main
+    if(statusCode === 200){
+        try{
+            const updateUserSql = 'UPDATE user_tb SET profile_img = $1 WHERE email = $2';
+            await pgPool.query(updateUserSql, [profileImg || defaultImg, req.user.email]);
+        }catch(err){    
+            console.log(err);
+    
+            statusCode = 409;
+            result.message = 'unexpected error occured';
+        }
     }
 
     //send result 

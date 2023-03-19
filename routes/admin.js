@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const mongodb = require('mongodb').MongoClient;
 const express = require('express');
 const adminAuth = require('../middleware/adminAuth');
 const path = require('path');
@@ -52,6 +53,38 @@ router.get('/user/all', adminAuth, async (req, res) => {
         result.data = selectUserResult.rows;
     }catch(err){
         console.log(err);
+    }
+
+    //send result
+    res.status(statusCode).send(result);
+});
+
+router.get('/log/all', adminAuth, async (req ,res) => {
+    //from FE
+    const offset = req.query.offset || 0;
+    const limit = parseInt(req.query.limit) || 100;
+
+    //to FE
+    const result = {};
+    let statusCode = 200;
+
+    //main
+    try{
+        const DB = await mongodb.connect("mongodb://localhost:27017");
+        const logCol = DB.db('gameuniv').collection('log');
+
+        const logFindResult = await logCol.find().limit(limit).sort({
+            req_time : -1
+        }).skip(offset * limit).toArray();
+
+        result.data = logFindResult;
+
+        DB.close();
+    }catch(err){
+        console.log(err);
+
+        statusCode = 409;
+        result.message = 'unexpected error occured';
     }
 
     //send result
