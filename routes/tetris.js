@@ -254,7 +254,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     let statusCode = 200;
 
     //validation check
-    if(score <= 0){
+    if(score < 0){
         statusCode = 400;
         result.message = 'invalid score';
     }
