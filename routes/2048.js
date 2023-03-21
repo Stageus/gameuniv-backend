@@ -4,8 +4,9 @@ const pgPool = require('../module/pgPool');
 const scoreCoint = require('../module/scoreCoin');
 const achieve = require('../module/achieve');
 const redis = require('../module/redisClient');
+const insertRankScore = require('../module/insertRankScore');
 
-router.get('/record/all', loginAuth, async (req, res) => {
+router.get('/record/all', async (req, res) => {
     //from FE
     const offset = req.query.offset || 0;
 
@@ -27,12 +28,14 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                         rank_tb.max_score AS max_score,
                                         user_tb.id AS id,
                                         profile_img AS profile_img,
-                                        university_name
+                                        university_name,
+                                        rank
                                     FROM
                                         (
                                             SELECT
                                                 MAX(game_score) AS max_score,
-                                                user_email AS user_email
+                                                user_email AS user_email,
+                                                RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
                                             FROM
                                                 game_2048_record_tb
                                             WHERE
@@ -64,7 +67,7 @@ router.get('/record/all', loginAuth, async (req, res) => {
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
                                     ORDER BY
-                                        max_score DESC
+                                        rank ASC
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [offset]);
 
@@ -154,13 +157,17 @@ router.post('/score', loginAuth, async (req ,res) => {
     }
     try{
         const curScore = await redis.get(`2048_score_${loginUserEmail}`);
+        await redis.del(`2048_score_${loginUserEmail}`);
 
         if(curScore != score){
-            statusCode = 409;
+            statusCode = 403;
             result.message = 'score error';
         }
     }catch(err){
         console.log(err);
+
+        statusCode = 409;
+        result.message = 'unexpected error occured';
     }
 
     //main
@@ -180,6 +187,9 @@ router.post('/score', loginAuth, async (req ,res) => {
 
             //COMMIT
             await pgClient.query('COMMIT');
+
+            //insert rank data
+            await insertRankScore(score, loginUserEmail, '2048');
 
             //achieve list
             const achieveList = await achieve(loginUserEmail, score, '2048');
@@ -261,6 +271,9 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //from FE
     const score = parseInt(req.query.score) || 0;
     const loginUserEmail = req.user.email;
+    const today = new Date();
+    today.setHours(today.getHours() + 9);
+    const tableName = `game_2048_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
     //to FE
     const result = {};
@@ -276,117 +289,94 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     if(statusCode === 200){
         try{
             //SELECT pre
-            const selectPreSql = `SELECT
-                                        MAX(id) AS pre_id,
-                                        MAX(university_name) AS pre_university_name,
-                                        MAX(game_score) AS pre_max_score
+            const selectPreSql = `SELECT 
+                                        CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
+                                        game_score pre_max_score,
+                                        university_name AS pre_university_name,
+                                        id AS pre_id
                                     FROM
-                                        game_2048_record_tb
+                                        ${tableName}
                                     JOIN
                                         user_tb
                                     ON
-                                        user_email = user_tb.email
+                                        user_email = email
                                     JOIN
                                         university_tb
                                     ON
-                                        user_tb.university_idx = university_tb.university_idx
+                                        university_tb.university_idx = user_tb.university_idx
                                     WHERE
-                                        EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
-                                    AND
-                                        EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
+                                        game_score > $1 
                                     AND
                                         user_tb.is_delete IS NULL
-                                    GROUP BY
-                                        user_email
-                                    HAVING
-                                        MAX(game_score) < $1
                                     ORDER BY
-                                        MAX(game_score) DESC
+                                        pre_rank DESC
                                     LIMIT
                                         1
                                     `;
             const selectPreResult = await pgPool.query(selectPreSql, [score]);
+            const userRank = selectPreResult.rows?.[0]?.pre_rank ? parseInt(selectPreResult.rows[0].pre_rank) + 1 : 1;
 
-            //SELECT next
-            const selectNextSql = `SELECT
-                                        MAX(id) AS next_id,
-                                        MAX(university_name) AS next_university_name,
-                                        MAX(game_score) AS next_max_score
-                                    FROM
-                                        game_2048_record_tb
-                                    JOIN
-                                        user_tb
-                                    ON
-                                        user_email = user_tb.email
-                                    JOIN
-                                        university_tb
-                                    ON
-                                        user_tb.university_idx = university_tb.university_idx
+            //SELECT rank
+            const selectNextSql = `SELECT 
+                                        rank + 1 AS next_rank,
+                                        game_score AS next_max_score,
+                                        university_name AS next_university_name,
+                                        id AS next_id
+                                    FROM 
+                                        (
+                                            SELECT 
+                                                CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
+                                                game_score,
+                                                user_email,
+                                                university_name,
+                                                id
+                                            FROM
+                                                ${tableName}
+                                            JOIN
+                                                user_tb
+                                            ON
+                                                user_email = email
+                                            JOIN
+                                                university_tb
+                                            ON
+                                                university_tb.university_idx = user_tb.university_idx
+                                            WHERE
+                                                user_tb.is_delete IS NULL
+                                            AND
+                                                game_score != 0
+                                            ORDER BY
+                                                rank ASC
+                                        ) AS temp_tb   
                                     WHERE
-                                        EXTRACT(MONTH FROM game_2048_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
-                                    AND
-                                        EXTRACT(YEAR FROM game_2048_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
-                                    AND
-                                        user_tb.is_delete IS NULL
-                                    GROUP BY
-                                        user_email
-                                    HAVING
-                                        MAX(game_score) > $1
-                                    ORDER BY
-                                        MAX(game_score) ASC
+                                        rank > $1
                                     LIMIT
                                         1
                                     `;
-            const selectNextResult = await pgPool.query(selectNextSql, [score]);
+            const selectNextResult = await pgPool.query(selectNextSql, [userRank]);
 
-            //SELECT rank
-            const selectRankSql = `SELECT 
-                                        RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
-                                    FROM
-                                        game_2048_record_tb
-                                    WHERE
-                                        EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
-                                    AND
-                                        EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
-                                    AND
-                                        (
-                                            SELECT
-                                                is_delete
-                                            FROM
-                                                user_tb
-                                            WHERE
-                                                game_2048_record_tb.user_email = user_tb.email
-                                        ) IS NULL
-                                    GROUP BY
-                                        user_email
-                                    HAVING
-                                        MAX(game_score) >= $1
-                                    LIMIT
-                                        101
-                                    `;
-            const selectRankResult = await pgPool.query(selectRankSql, [score]);
+            result.data = {
+                ...selectPreResult.rows[0],
+                ...selectNextResult.rows[0],
+                rank : userRank 
+            };
 
             await redis.set(`2048_score_${loginUserEmail}`, score);
             await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);
-
-            result.data = {
-                ...selectPreResult.rows?.[0],
-                ...selectNextResult.rows?.[0],
-                rank : parseInt(selectRankResult.rows.length || 0) + 1
-            }
-            if(result.data > 100){
-                result.data = -1;
-            }
         }catch(err){
-            console.log(err);
+            if(err.code === '42P01'){
+                result.data = {
+                    rank : 1
+                }
+            }else{
+                console.log(err);
 
-            statusCode = 409;
-            result.message = 'unexpected error occured';
+                statusCode = 409;
+                result.message = 'unexpected error occured';
+            }
         }
     }
 
     //send result
-    //console.log(statusCode);
     res.status(statusCode).send(result);
 });
 
