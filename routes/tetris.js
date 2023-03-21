@@ -9,6 +9,9 @@ const insertRankScore = require('../module/insertRankScore');
 router.get('/record/all', async (req, res) => {
     //from FE
     const offset = req.query.offset || 0;
+    const today = new Date();
+    today.setHours(today.getHours() + 9);
+    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
     //to FE
     const result = {};
@@ -24,52 +27,29 @@ router.get('/record/all', async (req, res) => {
     if(statusCode === 200){
         try{
             //SELECT rank
-            const selectRankSql = `SELECT  
-                                        rank_tb.max_score AS max_score,
-                                        user_tb.id AS id,
-                                        profile_img AS profile_img,
-                                        university_name,
-                                        rank
+            const selectRankSql = `SELECT 
+                                        CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
+                                        game_score AS max_score,
+                                        id,
+                                        profile_img,
+                                        university_name
                                     FROM
-                                        (
-                                            SELECT
-                                                MAX(game_score) AS max_score,
-                                                user_email AS user_email,
-                                                RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
-                                            FROM
-                                                game_tetris_record_tb
-                                            WHERE
-                                                EXTRACT(MONTH FROM game_tetris_record_tb.creation_time) = EXTRACT(MONTH FROM NOW())
-                                            AND
-                                                EXTRACT(YEAR FROM game_tetris_record_tb.creation_time) = EXTRACT(YEAR FROM NOW())
-                                            AND
-                                                (
-                                                    SELECT 
-                                                        is_delete 
-                                                    FROM 
-                                                        user_tb 
-                                                    WHERE 
-                                                        email = game_tetris_record_tb.user_email 
-                                                ) IS NULL
-                                            GROUP BY
-                                                user_email
-                                            LIMIT
-                                                100
-                                            OFFSET
-                                                $1 * 100
-                                        ) AS rank_tb
+                                        ${tableName}
                                     JOIN
                                         user_tb
                                     ON
-                                        user_tb.email = rank_tb.user_email
+                                        user_email = email
                                     JOIN
                                         university_tb
                                     ON
                                         user_tb.university_idx = university_tb.university_idx
-                                    ORDER BY
-                                        rank ASC
+                                    WHERE
+                                        user_tb.is_delete IS NULL
+                                    LIMIT
+                                        100
+                                    OFFSET
+                                        $1 * 100
                                     `;
-
             const selectRankResult = await pgPool.query(selectRankSql, [offset]);
 
             result.data = selectRankResult.rows;
@@ -88,6 +68,9 @@ router.get('/record/all', async (req, res) => {
 router.get('/record/:email', async (req, res) => {
     //from FE
     const userEmail = req.params.email;
+    const today = new Date();
+    today.setHours(today.getHours() + 9);
+    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
     //to FE
     const result = {};
@@ -95,37 +78,27 @@ router.get('/record/:email', async (req, res) => {
 
     //main
     try{
-        const selectRankSql = `SELECT 
+        const selectRankSql = `SELECT
                                     rank,
-                                    max_score
+                                    game_score AS max_score
                                 FROM
                                     (
                                         SELECT 
-                                            RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank,
-                                            MAX(game_score) AS max_score,
-                                            user_email AS user_email
-                                        FROM
-                                            game_tetris_record_tb
-                                        WHERE
-                                            EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
-                                        AND
-                                            EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
-                                        AND
-                                            (
-                                                SELECT
-                                                    is_delete
-                                                FROM
-                                                    user_tb
-                                                WHERE
-                                                    email = game_tetris_record_tb.user_email
-                                            ) IS NULL
-                                        GROUP BY
+                                            CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
+                                            game_score,
                                             user_email
+                                        FROM
+                                            ${tableName}
+                                        JOIN
+                                            user_tb
+                                        ON
+                                            user_email = email
+                                        WHERE
+                                            user_tb.is_delete IS NULL
                                     ) AS rank_tb
                                 WHERE
                                     user_email = $1
                                 `;
-        
         const selectRankResult = await pgPool.query(selectRankSql, [userEmail]);
 
         result.data = selectRankResult.rows[0] || {
