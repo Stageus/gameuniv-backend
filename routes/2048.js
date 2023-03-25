@@ -29,7 +29,7 @@ router.get('/record/all', async (req, res) => {
             const selectRankSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
                                         game_score AS max_score,
-                                        user_name AS id,
+                                        user_name AS user_name,
                                         profile_img,
                                         university_name
                                     FROM
@@ -295,7 +295,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         rank + 1 AS next_rank,
                                         game_score AS next_max_score,
                                         university_name AS next_university_name,
-                                        user_name AS user_name
+                                        user_name AS next_user_name
                                     FROM 
                                         (
                                             SELECT 
@@ -322,7 +322,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                                 rank ASC
                                         ) AS temp_tb   
                                     WHERE
-                                        rank > $1
+                                        rank >= $1
                                     LIMIT
                                         1
                                     `;

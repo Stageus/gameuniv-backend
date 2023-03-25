@@ -20,12 +20,12 @@ router.get('/user', loginAuth, async (req, res) => {
     //main
     try{
         //SELECT user
-        const selectUserSql = 'SELECT id, email, profile_img, university_name FROM user_tb JOIN university_tb ON university_tb.university_idx = user_tb.university_idx WHERE email = $1';
+        const selectUserSql = 'SELECT user_name, email, profile_img, university_name FROM user_tb JOIN university_tb ON university_tb.university_idx = user_tb.university_idx WHERE email = $1';
         const selectUserResult = await pgPool.query(selectUserSql, [loginUserEmail]);
 
         if(selectUserResult.rows?.[0]){
             result.data = {
-                id : selectUserResult.rows[0].id,
+                user_name : selectUserResult.rows[0].user_name,
                 email : selectUserResult.rows[0].email,
                 profileImg : selectUserResult.rows[0].profile_img,
                 universityName : selectUserResult.rows[0].university_name
