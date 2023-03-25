@@ -30,7 +30,7 @@ router.get('/record/all', async (req, res) => {
             const selectRankSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
                                         game_score AS max_score,
-                                        id,
+                                        user_name AS id,
                                         profile_img,
                                         university_name
                                     FROM
@@ -267,7 +267,8 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
                                         game_score pre_max_score,
                                         university_name AS pre_university_name,
-                                        id AS pre_id
+                                        id AS pre_id,
+                                        user_name AS user_name
                                     FROM
                                         ${tableName}
                                     JOIN
@@ -295,7 +296,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         rank + 1 AS next_rank,
                                         game_score AS next_max_score,
                                         university_name AS next_university_name,
-                                        id AS next_id
+                                        user_name AS user_name
                                     FROM 
                                         (
                                             SELECT 
@@ -303,7 +304,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                                 game_score,
                                                 user_email,
                                                 university_name,
-                                                id
+                                                user_name
                                             FROM
                                                 ${tableName}
                                             JOIN

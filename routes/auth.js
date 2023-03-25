@@ -9,17 +9,39 @@ const makeToken = require('../module/makeToken');
 const cookieConfig = require('../config/cookieConfig');
 const loginAuth = require('../middleware/loginAuth');
 
-router.get('/user', loginAuth, (req, res) => {
+router.get('/user', loginAuth, async (req, res) => {
+    //from FE
+    const loginUserEmail = req.user.email;
+
     //to FE
     const result = {};
     let statusCode = 200;
 
     //main
-    result.data = {
-        id : req.user.id,
-        email : req.user.email,
-        profileImg : req.user.profileImg,
-        universityName : req.user.universityName
+    try{
+        //SELECT user
+        const selectUserSql = 'SELECT id, email, profile_img, university_name FROM user_tb JOIN university_tb ON university_tb.university_idx = user_tb.university_idx WHERE email = $1';
+        const selectUserResult = await pgPool.query(selectUserSql, [loginUserEmail]);
+
+        if(selectUserResult.rows?.[0]){
+            result.data = {
+                id : selectUserResult.rows[0].id,
+                email : selectUserResult.rows[0].email,
+                profileImg : selectUserResult.rows[0].profile_img,
+                universityName : selectUserResult.rows[0].university_name
+            }
+        }else{
+            res.clearCookie('token');
+        }
+    }catch(err){
+        console.log(err);
+        
+        result.data = {
+            id : req.user.id,
+            email : req.user.email,
+            profileImg : req.user.profileImg,
+            universityName : req.user.universityName
+        }
     }
 
     //send result

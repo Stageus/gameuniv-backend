@@ -29,7 +29,7 @@ router.get('/record/all', async (req, res) => {
             const selectRankSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
                                         game_score AS max_score,
-                                        id,
+                                        user_name AS id,
                                         profile_img,
                                         university_name
                                     FROM
@@ -169,7 +169,7 @@ router.post('/score', loginAuth, async (req ,res) => {
             const achieveList = await achieve(loginUserEmail, score, '2048');
 
             //SELECT rank
-            const selectRankSql = `SELECT 
+            const selectRankSql = `SELECT
                                         RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
                                     FROM
                                         game_2048_record_tb
@@ -248,7 +248,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     const today = new Date();
     today.setHours(today.getHours() + 9);
     const tableName = `game_2048_${today.getFullYear()}${today.getMonth()}_rank_tb`;
-
+    
     //to FE
     const result = {};
     let statusCode = 200;
@@ -267,7 +267,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
                                         game_score pre_max_score,
                                         university_name AS pre_university_name,
-                                        id AS pre_id
+                                        user_name AS pre_user_name
                                     FROM
                                         ${tableName}
                                     JOIN
@@ -295,7 +295,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                         rank + 1 AS next_rank,
                                         game_score AS next_max_score,
                                         university_name AS next_university_name,
-                                        id AS next_id
+                                        user_name AS user_name
                                     FROM 
                                         (
                                             SELECT 
@@ -303,7 +303,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                                 game_score,
                                                 user_email,
                                                 university_name,
-                                                id
+                                                user_name
                                             FROM
                                                 ${tableName}
                                             JOIN
@@ -334,6 +334,8 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                 rank : userRank 
             };
 
+            console.log(result.data);
+
             await redis.set(`2048_score_${loginUserEmail}`, score);
             await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);
         }catch(err){
@@ -343,7 +345,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                 }
             }else{
                 console.log(err);
-
+                
                 statusCode = 409;
                 result.message = 'unexpected error occured';
             }
