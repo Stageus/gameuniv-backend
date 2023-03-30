@@ -63,6 +63,10 @@ router.get('/log/all', adminAuth, async (req ,res) => {
     //from FE
     const offset = req.query.offset || 0;
     const limit = parseInt(req.query.limit) || 100;
+    const searchEmail = req.query.email;
+    const searchMethodd = req.query.method;
+    const searchPath = req.query.path;
+    const searchStatusCode = req.query.code;
 
     //to FE
     const result = {};
@@ -73,7 +77,23 @@ router.get('/log/all', adminAuth, async (req ,res) => {
         const DB = await mongodb.connect("mongodb://localhost:27017");
         const logCol = DB.db('gameuniv').collection('log');
 
-        const logFindResult = await logCol.find().limit(limit).sort({
+        const mongoQuery = {};
+        if(searchEmail){
+            mongoQuery.req_user_email = searchEmail;
+        }
+        if(searchMethodd){
+            mongoQuery.method = searchMethodd.toUpperCase();
+        }
+        if(searchPath){
+            mongoQuery.api_path = {
+                $regex : searchPath
+            };
+        }
+        if(searchStatusCode){
+            mongoQuery.status_code = parseInt(searchStatusCode);
+        }
+
+        const logFindResult = await logCol.find(mongoQuery).limit(limit).sort({
             req_time : -1
         }).skip(offset * limit).toArray();
 

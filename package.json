@@ -22,7 +22,6 @@
     "multer-s3-transform": "^2.10.3",
     "nodemailer": "^6.9.1",
     "pg": "^8.10.0",
-    "redis": "^4.6.5",
-    "redis-connection-pool": "^4.0.1"
+    "redis": "^4.6.5"
   }
 }

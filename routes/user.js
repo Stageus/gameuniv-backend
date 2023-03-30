@@ -80,8 +80,6 @@ router.post('/', profileUpload, async (req, res) => {
     const profileImg = req?.file?.key || null;
     const defaultImg = req.body.defaultImg || null;
 
-    console.log(inputEmail, inputId, inputName, universityIdx);
-
     //to FE
     const result = {};
     let statusCode = 200;

@@ -70,8 +70,9 @@ router.get('/all', async (req, res) => {
                 }
                                 FROM 
                                     item_tb
+                                ORDER BY
+                                    unlock_state DESC
                                 `;
-
         const selectItemResult = await pgPool.query(selectItemSql, loginUserEmail ? [loginUserEmail] : []);
         result.data = selectItemResult.rows
     }catch(err){
@@ -122,7 +123,7 @@ router.get('/pick/all', loginAuth, async (req, res) => {
     //main
     try{
         //SELECT item
-        const selectItemSql = 'SELECT item_pick_tb.item_idx, item_name, preview_img, detail_img, item_price FROM item_pick_tb JOIN item_tb ON item_tb.item_idx = item_pick_tb.item_idx WHERE item_pick_tb.user_email = $1';
+        const selectItemSql = 'SELECT item_pick_tb.item_idx, item_name, preview_img, detail_img, item_price FROM item_pick_tb JOIN item_tb ON item_tb.item_idx = item_pick_tb.item_idx WHERE item_pick_tb.user_email = $1 ORDER BY item_pick_tb.creation_time ASC';
         const selectItemResult = await pgPool.query(selectItemSql, [loginUserEmail]);
 
         result.data = selectItemResult.rows;

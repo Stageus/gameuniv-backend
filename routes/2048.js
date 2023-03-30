@@ -119,6 +119,9 @@ router.post('/score', loginAuth, async (req ,res) => {
     const score = req.body.score || 0;
     const loginUserEmail = req.user.email;
     const coin = scoreCoint(score);
+    const today = new Date();
+    today.setHours(today.getHours() + 9);
+    const tableName = `game_2048_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
     //to FE
     const result = { data : { achieveList : [] } };
@@ -136,6 +139,14 @@ router.post('/score', loginAuth, async (req ,res) => {
         if(curScore != score){
             statusCode = 403;
             result.message = 'score error';
+
+            try{
+                //INSERT suspected user
+                const isnertSuspUserSql = 'INSERT INTO suspected_user_tb ( suspected_user_email ) VALUES ( $1 )';
+                await pgPool.query(isnertSuspUserSql, [loginUserEmail]);
+            }catch(err){
+                console.log(err);
+            }
         }
     }catch(err){
         console.log(err);
@@ -169,35 +180,44 @@ router.post('/score', loginAuth, async (req ,res) => {
             const achieveList = await achieve(loginUserEmail, score, '2048');
 
             //SELECT rank
-            const selectRankSql = `SELECT
-                                        RANK() OVER ( ORDER BY MAX(game_score) DESC) AS rank
+            const selectRankSql = `SELECT 
+                                        CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
+                                        game_score,
+                                        user_email,
+                                        university_name,
+                                        user_name
                                     FROM
-                                        game_2048_record_tb
+                                        ${tableName}
+                                    JOIN
+                                        user_tb
+                                    ON
+                                        user_email = email
+                                    JOIN
+                                        university_tb
+                                    ON
+                                        university_tb.university_idx = user_tb.university_idx
                                     WHERE
-                                        EXTRACT(MONTH FROM creation_time) = EXTRACT(MONTH FROM NOW())
+                                        user_tb.is_delete IS NULL
                                     AND
-                                        EXTRACT(YEAR FROM creation_time) = EXTRACT(YEAR FROM NOW())
+                                        game_score != 0
                                     AND
-                                        (
-                                            SELECT
-                                                is_delete
-                                            FROM
-                                                user_tb
-                                            WHERE
-                                                game_2048_record_tb.user_email = user_tb.email
-                                        ) IS NULL
-                                    GROUP BY
-                                        user_email
-                                    HAVING
-                                        MAX(game_score) >= $1
+                                        game_score >= $1
+                                    ORDER BY
+                                        rank DESC
                                     LIMIT
-                                        101
+                                        1
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
-            result.data.rank = parseInt(selectRankResult.rows.length || 0) + 1;
-            if(result.data.rank >= 101){
-                result.data.rank = -1;
+            if(selectRankResult.rows[0]){
+                if(selectRankResult.rows[0].game_score == score){
+                    result.data.rank = selectRankResult.rows[0].rank;
+                }else{
+                    result.data.rank = selectRankResult.rows[0].rank + 1;
+                }
+            }else{
+                result.data.rank = 1;
             }
+
             result.data.coin = coin;
 
             //insert achieve
@@ -333,8 +353,6 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                 ...selectNextResult.rows[0],
                 rank : userRank 
             };
-
-            console.log(result.data);
 
             await redis.set(`2048_score_${loginUserEmail}`, score);
             await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);

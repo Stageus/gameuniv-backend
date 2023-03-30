@@ -14,6 +14,7 @@ module.exports = (req, res, result) => {
                 method : req.method, // req method
                 api_path : urlObj.pathname, // api path
                 querystring : urlObj.query, // req query
+                body : req.body, // req body
                 req_time : req.date || null, // req time
                 res_time : new Date(), // res time
                 status_code : res.statusCode || 409, // status code
