@@ -55,8 +55,12 @@ router.get('/record/all', async (req, res) => {
         }catch(err){
             console.log(err);
 
-            result.message = 'unexpected error occured';
-            statusCode = 409;
+            if(err.code === '42P01'){
+                result.data = [];
+            }else{
+                result.message = 'unexpected error occured';
+                statusCode = 409;
+            }
         }
     }
 
@@ -106,8 +110,14 @@ router.get('/record/:email', loginAuth, async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occured';
-        statusCode = 409;
+        if(err.code === '42P01'){
+            result.data = {
+                rank : -2
+            };
+        }else{
+            result.message = 'unexpected error occured';
+            statusCode = 409;
+        }
     }
     
     //send result
@@ -136,6 +146,7 @@ router.post('/score', loginAuth, async (req ,res) => {
         const curScore = await redis.get(`2048_score_${loginUserEmail}`);
         await redis.del(`2048_score_${loginUserEmail}`);
 
+        console.log(curScore, score);
         if(curScore != score){
             statusCode = 403;
             result.message = 'score error';
@@ -282,6 +293,9 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //main
     if(statusCode === 200){
         try{
+            await redis.set(`2048_score_${loginUserEmail}`, score);
+            await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);
+            
             //SELECT pre
             const selectPreSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
@@ -353,9 +367,6 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                 ...selectNextResult.rows[0],
                 rank : userRank 
             };
-
-            await redis.set(`2048_score_${loginUserEmail}`, score);
-            await redis.expire(`2048_score_${loginUserEmail}`, 60 * 30);
         }catch(err){
             if(err.code === '42P01'){
                 result.data = {

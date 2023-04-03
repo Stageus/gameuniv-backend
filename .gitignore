@@ -7,3 +7,5 @@ tableSql.sql
 public
 
 data/
+
+*.swp

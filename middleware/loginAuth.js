@@ -11,6 +11,6 @@ module.exports = (req, res, next) => {
         req.user = verifiedResult.data;
         next();
     }else{
-        res.status(401).send({ message : 'no login' });
+        res.status(401).send({ message : '로그인을 해야합니다.' });
     }
 }
