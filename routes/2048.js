@@ -286,7 +286,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //validation check
     if(score < 0){
         statusCode = 400;
-        result.message = 'invalid score';
+        result.message = 'score값이 유효하지 않습니다.';
     }
 
     //main
