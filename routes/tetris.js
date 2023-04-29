@@ -147,7 +147,6 @@ router.post('/score', loginAuth, async (req, res) => {
         const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
         await redis.del(`tetris_score_${loginUserEmail}`);
         
-        console.log(curScore, score);
         if(curScore != score){
             statusCode = 403;
             result.message = 'score error';
@@ -275,6 +274,7 @@ router.post('/score', loginAuth, async (req, res) => {
 router.get('/score/rank', loginAuth, async (req, res) => {
     //from FE
     const score = parseInt(req.query.score) || 0;
+    req.score = parseInt(req.query.score) || '';
     const loginUserEmail = req.user.email;
     const today = new Date();
     today.setHours(today.getHours() + 9);
