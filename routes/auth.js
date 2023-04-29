@@ -106,7 +106,7 @@ router.post('/', async (req, res) => {
         console.log(err);
 
         statusCode = 409;
-        result.message = 'unexpected error occured';
+        result.message = 'unexpected error occurred';
     }
 
     //send result
@@ -141,7 +141,7 @@ router.get('/email/number', async (req, res) => {
             console.log(err);
     
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = 'unexpected error occurred';
         }
     }
 
@@ -197,7 +197,7 @@ router.post('/email/number', async (req, res) => {
             console.log(err);
             
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = 'unexpected error occurred';
         }
     }
 

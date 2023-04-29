@@ -1,10 +1,12 @@
 const mongodb = require('mongodb').MongoClient;
 const verifyToken = require('../module/verifyToken');
 const url = require('url');
+const logstash = require('../module/logstash');
 
 module.exports = (req, res, result) => {
     return new Promise(async (resolve, reject) => {
         const urlObj = url.parse(req.originalUrl);
+        logstash(req, res, result);
 
         try{
             const DB = await mongodb.connect("mongodb://localhost:27017");
