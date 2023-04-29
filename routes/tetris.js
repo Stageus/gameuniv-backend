@@ -20,7 +20,7 @@ router.get('/record/all', async (req, res) => {
     //validaion check
     if(offset < 0){
         statusCode = 400;
-        result.message = 'invalid offset';
+        result.message = 'offset값이 유효하지 않습니다.';
     }
 
     //main
@@ -59,7 +59,7 @@ router.get('/record/all', async (req, res) => {
             if(err.code === '42P01'){
                 result.data = [];
             }else{
-                result.message = 'unexpected error occured';
+                result.message = '예상하지 못한 에러가 발생했습니다.';
                 statusCode = 409;
             }
         }
@@ -116,7 +116,7 @@ router.get('/record/:email', async (req, res) => {
                 rank : -2
             };
         }else{
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
             statusCode = 409;
         }
     }
@@ -141,7 +141,7 @@ router.post('/score', loginAuth, async (req, res) => {
     //validaion check
     if(score < 0){
         statusCode = 400;
-        result.message = 'invalid score';
+        result.message = 'score값이 유효하지 않습니다.';
     }
     try{
         const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
@@ -164,7 +164,7 @@ router.post('/score', loginAuth, async (req, res) => {
         console.log(err);
 
         statusCode = 409;
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
     }
 
     //main
@@ -262,7 +262,7 @@ router.post('/score', loginAuth, async (req, res) => {
             await pgClient.query('ROLLBACK');
 
             result.status = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }finally{
             await pgClient.release();
         }
@@ -287,7 +287,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
     //validation check
     if(score < 0){
         statusCode = 400;
-        result.message = 'invalid score';
+        result.message = 'score값이 유효하지 않습니다.';
     }
 
     //main
@@ -377,7 +377,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                 console.log(err);
                 
                 statusCode = 409;
-                result.message = 'unexpected error occured';
+                result.message = '예상하지 못한 에러가 발생했습니다.';
             }
         }
     }

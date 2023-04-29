@@ -96,17 +96,17 @@ router.post('/', async (req, res) => {
                 res.cookie('token', token, cookieConfig);
             }else{
                 statusCode = 403;
-                result.message = 'block user';
+                result.message = '아이디가 정지 되었습니다.';
             }
         }else{
             statusCode = 400;
-            result.message = 'invalid id or pw';
+            result.message = '아이디 또는 패스워드가 잘못되었습니다.';
         }
     }catch(err){
         console.log(err);
 
         statusCode = 409;
-        result.message = 'unexpected error occurred';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
     }
 
     //send result
@@ -129,10 +129,10 @@ router.get('/email/number', async (req, res) => {
             
             if(!authNumber){
                 statusCode = 403;
-                result.message = 'no email is being authenticated';
+                result.message = '인증 번호가 발송되지 않았습니다.';
             }else if(authNumber !== inputAuthNumber){
                 statusCode = 400;
-                result.message = 'wrong number';
+                result.message = '인증번호가 잘못되었습니다.';
             }else{
                 await redis.set(`certified-${email}`, 1);
                 await redis.expire(`certified-${email}`, 60 * 30);
@@ -141,7 +141,7 @@ router.get('/email/number', async (req, res) => {
             console.log(err);
     
             statusCode = 409;
-            result.message = 'unexpected error occurred';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -161,11 +161,11 @@ router.post('/email/number', async (req, res) => {
     //validaion check
     if(!userEmailRegExp.test(email)){
         statusCode = 400;
-        result.message = 'invalid email';
+        result.message = '이메일이 유효하지 않습니다.';
     }
     if(!universityName || universityName.length > 32){
         statusCode = 400;
-        result.message = 'invalid university name';
+        result.message = '대학이름이 유효하지 않습니다.';
     }
 
     //main
@@ -187,17 +187,17 @@ router.post('/email/number', async (req, res) => {
                     await sendEmail(email, randomNumber);
                 }else{
                     statusCode = 404;
-                    result.message = 'invalid email domain';
+                    result.message = '이메일 주소가 학교 이메일 주소와 다릅니다.';
                 }
             }else{
                 statusCode = 403;
-                result.message = 'block user';
+                result.message = '계정이 정지되어있습니다.';
             }
         }catch(err){
             console.log(err);
             
             statusCode = 409;
-            result.message = 'unexpected error occurred';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 

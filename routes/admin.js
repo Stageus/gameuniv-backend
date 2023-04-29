@@ -104,7 +104,7 @@ router.get('/log/all', adminAuth, async (req ,res) => {
         console.log(err);
 
         statusCode = 409;
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
     }
 
     //send result

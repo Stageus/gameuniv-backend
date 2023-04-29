@@ -78,7 +78,7 @@ router.get('/all', async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occrued';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
         statusCode = 409;
     }
 
@@ -104,7 +104,7 @@ router.get('/buy/all', loginAuth, async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
         statusCode = 409;
     }
 
@@ -130,7 +130,7 @@ router.get('/pick/all', loginAuth, async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
         statusCode = 409;
     }
 
@@ -150,7 +150,7 @@ router.post('/buy', loginAuth, async (req, res) => {
     //validation check
     if(itemIdx < 0){
         statusCode = 400;
-        result.message = 'invalid item idx';
+        result.message = '해당 아이템은 존재하지 않습니다.';
     }
 
     //main
@@ -225,7 +225,7 @@ router.post('/buy', loginAuth, async (req, res) => {
             console.log(err);
 
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -245,7 +245,7 @@ router.post('/pick', loginAuth, async (req, res) => {
     //validaion check
     if(inputItemIdx < 0){
         statusCode = 400;
-        result.message = 'invalid item idx';
+        result.message = '해당 아이템은 존재하지 않습니다.';
     }
 
     //main
@@ -259,13 +259,13 @@ router.post('/pick', loginAuth, async (req, res) => {
 
             if(err.code === '23505'){
                 statusCode = 403;
-                result.message = 'already picked item';
+                result.message = '이미 찜한 아이템입니다.';
             }else if(err.code === '23503'){
                 statusCode = 404;
-                result.message = 'cannot find item idx';
+                result.message = '해당 아이템은 존재하지 않습니다.';
             }else{
                 statusCode = 409;
-                result.message = 'unexpected error occured';
+                result.message = '예상하지 못한 에러가 발생했습니다.';
             }
         }
     }
@@ -285,7 +285,7 @@ router.delete('/pick', loginAuth, async (req, res) => {
 
     //validaion check
     if(inputItemIdx < 0){
-        result.message = 'invalid item idx';
+        result.message = '해당 아이템은 존재하지 않습니다.';
         statusCode = 400;
     }
 
@@ -298,13 +298,13 @@ router.delete('/pick', loginAuth, async (req, res) => {
 
             if(deletePickResult.rowCount === 0){
                 statusCode = 403;
-                result.message = 'have not already picked item';
+                result.message = '이미 찜을 하지 않았습니다.';
             }
         }catch(err){
             console.log(err);
 
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 

@@ -16,7 +16,7 @@ router.get('/all', async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
         statusCode = 409;
     }
 

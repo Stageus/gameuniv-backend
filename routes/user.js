@@ -18,7 +18,7 @@ router.get('/id/duplication', async (req ,res) => {
     //validaion check
     console.log(userIdRegExp.test(inputId));
     if(!userIdRegExp.test(inputId)){
-        result.message = 'invalid id';
+        result.message = 'id값이 유효하지 않습니다.';
         statusCode = 400;
     }
 
@@ -30,13 +30,13 @@ router.get('/id/duplication', async (req ,res) => {
 
             if(selectIdResult.rows.length !== 0){
                 statusCode = 403;
-                result.message = 'id already exists';
+                result.message = '이미 존재하는 아이디입니다.';
             }
         }catch(err){
             console.log(err);
             
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -61,7 +61,7 @@ router.get('/coin', loginAuth, async (req, res) => {
     }catch(err){
         console.log(err);
 
-        result.message = 'unexpected error occured';
+        result.message = '예상하지 못한 에러가 발생했습니다.';
         statusCode = 409;
     }
 
@@ -86,20 +86,20 @@ router.post('/', profileUpload, async (req, res) => {
 
     //validation check
     if(!userEmailRegExp.test(inputEmail)){
-        result.message = 'invalid email';
+        result.message = '이메일 형식이 유효하지 않습니다.';
         statusCode = 400;
     }else if(!userIdRegExp.test(inputId)){
         console.log(userIdRegExp.test(inputId));
-        result.message = 'invalid id';
+        result.message = '아이디 형식이 유효하지 않습니다.';
         statusCode = 400;
     }else if(!userNameRegExp.test(inputName)){
-        result.message = 'invalid name';
+        result.message = '이름 형식이 유효하지 않습니다.';
         statusCode = 400;
     }else if(!userPwRegExp.test(inputPw)){
-        result.message = 'invalid pw';
+        result.message = '패스워드 형식이 유효하지 않습니다.';
         statusCode = 400;
     }else if(inputPw !==  inputPwCheck){
-        result.message = 'wrong pw check';
+        result.message = '비밀번호와 비밀번호 확인 값이 일치해야합니다.';
         statusCode = 400;
     }
 
@@ -132,7 +132,7 @@ router.post('/', profileUpload, async (req, res) => {
             await redis.del(`certified-${req.body.email}`);
         }else{
             statusCode = 403;
-            result.message = 'no email auth';
+            result.message = '이메일 인증이 되어있지 않습니다.';
         }   
     }catch(err){
         console.log(err);
@@ -141,10 +141,10 @@ router.post('/', profileUpload, async (req, res) => {
 
         if(err.code === '23502'){
             statusCode = 400;
-            result.message = 'invalid university idx';
+            result.message = '해당하는 대학이 없습니다.';
         }else{
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -163,7 +163,7 @@ router.get('/id', async (req, res) => {
     //validation check
     if(!userEmailRegExp.test(inputEmail)){
         statusCode = 400;
-        result.message = 'invalid id';
+        result.message = '아이디가 유효하지 않습니다.';
     }
 
     //main
@@ -177,13 +177,13 @@ router.get('/id', async (req, res) => {
                 await sendEmail(inputEmail, selectIdResult.rows[0].id, '아이디 찾기');
             }else{
                 statusCode = 401;
-                result.message = 'cannot find user with email';
+                result.message = '해당 이메일로 가입된 아이디가 없습니다.';
             }
         }catch(err){
             console.log(err);
 
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -205,7 +205,7 @@ router.post('/profile-img', loginAuth, profileUpload, async (req, res) => {
     //validaion check
     if(profileImg === null && defaultImg === null){
         statusCode = 400;
-        result.message = 'no image';
+        result.message = '프로필 이미지가 없습니다.';
     }
 
     //main
@@ -217,7 +217,7 @@ router.post('/profile-img', loginAuth, profileUpload, async (req, res) => {
             console.log(err);
     
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
@@ -237,7 +237,7 @@ router.put('/pw', async (req, res) => {
 
     //validation check
     if(!userPwRegExp.test(inputPw)){
-        result.message = 'invalid pw';
+        result.message = '비밀번호 형식이 유효하지 않습니다.';
         statusCode = 400;
     }
 
@@ -259,16 +259,16 @@ router.put('/pw', async (req, res) => {
                     await redis.del(`certified-${inputEmail}`);
                 }else{
                     statusCode = 403;
-                    result.message = 'no certified email';
+                    result.message = '이메일 인증을 해야합니다.';
                 }
             }else{
                 statusCode = 401;
-                result.message = 'email does not exist';
+                result.message = '가입되지 않은 이메일입니다.';
             }
         }catch(err){
             console.log(err);
     
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
             statusCode = 409;
         }
     }
@@ -288,7 +288,7 @@ router.delete('/:email', loginAuth, async (req, res) => {
     //authority check
     if(req.user.authority !== 1 && req.user.email !== inputEmail){
         statusCode = 403;
-        result.message = 'no auth';
+        result.message = '권한이 없습니다.';
     }
     
     //main
@@ -309,7 +309,7 @@ router.delete('/:email', loginAuth, async (req, res) => {
             console.log(err);
 
             statusCode = 409;
-            result.message = 'unexpected error occured';
+            result.message = '예상하지 못한 에러가 발생했습니다.';
         }
     }
 
