@@ -12,11 +12,11 @@ makeUserItem = (userData) => {
 
     const emailContainer = document.createElement('div');
     emailContainer.classList.add('email_container');
-    emailContainer.innerText = `이메일 : ${userEmail}`;
+    emailContainer.innerText = `${userEmail}`;
 
     const idContainer = document.createElement('div');
     idContainer.classList.add('id_container')
-    idContainer.innerText = `id : ${userId}`;
+    idContainer.innerText = `${userId}`;
 
     const univNameContainer = document.createElement('div');
     univNameContainer.classList.add('university_name_container')
@@ -24,23 +24,23 @@ makeUserItem = (userData) => {
 
     const coinContainer = document.createElement('div');
     coinContainer.classList.add('coin_container');
-    coinContainer.innerText = `코인 : ${userCoin}`;
+    coinContainer.innerText = `${userCoin}`;
 
     const game2048CountContainer = document.createElement('div');
-    game2048CountContainer.classList.add('2048_game_count_container');
-    game2048CountContainer.innerText = `2048 판 수 : ${user2048GameCount}`;
+    game2048CountContainer.classList.add('game_2048_game_count_container');
+    game2048CountContainer.innerText = `${user2048GameCount}`;
     
     const gameTetrisCountContainer = document.createElement('div');
     gameTetrisCountContainer.classList.add('tetris_game_count_container');
-    gameTetrisCountContainer.innerText = `테트리스 판 수 : ${usertetrisGameCount}`;
+    gameTetrisCountContainer.innerText = `${usertetrisGameCount}`;
 
     const isDeleteContainer = document.createElement('div');
     isDeleteContainer.classList.add('is_delete_container');
-    isDeleteContainer.innerText = `계정 삭제 : ${userIsDelete}`;
+    isDeleteContainer.innerText = `${userIsDelete}`;
 
     const blockStateContainer = document.createElement('div');
-    blockStateContainer.classList.add('div');
-    blockStateContainer.innerText = `계정 정지 : ${userBlockState}`;
+    blockStateContainer.classList.add('block_state_container');
+    blockStateContainer.innerText = `${userBlockState}`;
 
     const userInfoContainer = document.createElement('div');
     userInfoContainer.classList.add('user_info_container');
@@ -60,8 +60,9 @@ makeUserItem = (userData) => {
     blockButton.dataset.email = userEmail;
 
     const blockDelBtn = document.createElement('button');
+    blockDelBtn.classList.add('delete_block_btn');
     blockDelBtn.dataset.email = userEmail;
-    blockDelBtn.innerText = '정지해제하기';
+    blockDelBtn.innerText = '정지해제';
     blockDelBtn.addEventListener('click', blockDelBtnEvent);
 
     const buttonContainer = document.createElement('div');
@@ -112,7 +113,7 @@ const blockBtnEvent = async (e) => {
 const blockDelBtnEvent = async (e) => {
     const blockEmail = e.target.dataset.email
 
-    const confirmResult = confirm('정말 정지하시겠습니까?');
+    const confirmResult = confirm('정말 정지를 해제하시겠습니까?');
 
     if(confirmResult){
         const response = await fetch(`/block/user?email=${blockEmail}`, {
@@ -123,7 +124,7 @@ const blockDelBtnEvent = async (e) => {
         });
 
         if(response.status === 200){
-            alert('정지되었습니다.');
+            alert('정지가 해제되었습니다.');
         }else{
             alert('에러가 발생했습니다.');
         }

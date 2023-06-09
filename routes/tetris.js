@@ -299,10 +299,9 @@ router.get('/score/rank', loginAuth, async (req, res) => {
             //SELECT pre
             const selectPreSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
-                                        game_score pre_max_score,
+                                        game_score AS pre_max_score,
                                         university_name AS pre_university_name,
-                                        id AS pre_id,
-                                        user_name AS user_name
+                                        user_name AS pre_user_name
                                     FROM
                                         ${tableName}
                                     JOIN

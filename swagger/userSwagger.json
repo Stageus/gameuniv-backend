@@ -1,0 +1,146 @@
+{
+    "/": {
+        "get": {
+            "tags": [
+                "Main"
+            ],
+            "summary": "serve Main Page",
+            "responses": {
+                "200": {
+                    "description": "success"
+                }
+            }
+        }
+    },
+    "/user": {
+        "get": {
+            "tags": [
+                "user"
+            ],
+            "summary": "현재 로그인한 사용자 정보 가져오기",
+            "responses": {
+                "200": {
+                    "description": "성공"
+                },
+                "401": {
+                    "description": "토큰 만료"
+                },
+                "409": {
+                    "description": "데이터베이스 에러"
+                },
+                "500": {
+                    "description": "서버 에러"
+                }
+            }
+        },
+        "post": {
+            "tags": [
+                "user"
+            ],
+            "summary": "회원가입 하기",
+            "parameters": [
+                {
+                    "in": "body",
+                    "name" : "body",
+                    "schema": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                                "required": true
+                            },
+                            "id": {
+                                "type": "string",
+                                "required": true
+                            },
+                            "pw": {
+                                "type": "string",
+                                "required": true
+                            },
+                            "pwCheck": {
+                                "type": "string",
+                                "required": true
+                            },
+                            "universityIdx": {
+                                "type": "integer"
+                            },
+                            "defaultImg": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "in": "formData",
+                    "name": "profileImg",
+                    "type": "file",
+                    "require": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "성공"
+                },
+                "400": {
+                    "description": "body 데이터 형식 에러",
+                    "schema": {
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "401": {
+                    "description": "토큰 만료"
+                },
+                "409": {
+                    "description": "데이터베이스 에러"
+                },
+                "500": {
+                    "description": "서버 에러"
+                }
+            }
+        }
+    },
+    "/user/coin": {
+        "get": {
+            "tags": [
+                "user"
+            ],
+            "summary": "현재 로그인한 사용자 코인 가져오기",
+            "responses": {
+                "200": {
+                    "description": "성공",
+                    "schema": {
+                        "properties": {
+                            "data": {
+                                "properties": {
+                                    "coin": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "401": {
+                    "description": "토큰 만료",
+                    "schema": {
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "서버 에러"
+                    }
+                },
+                "409": {
+                    "description": "데이터베이스 에러"
+                },
+                "500": {
+                    "description": "서버 에러"
+                }
+            }
+        }
+    }
+}

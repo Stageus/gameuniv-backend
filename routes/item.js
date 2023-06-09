@@ -74,7 +74,7 @@ router.get('/all', async (req, res) => {
                                     unlock_state DESC
                                 `;
         const selectItemResult = await pgPool.query(selectItemSql, loginUserEmail ? [loginUserEmail] : []);
-        result.data = selectItemResult.rows
+        result.data = selectItemResult.rows;
     }catch(err){
         console.log(err);
 

@@ -9,6 +9,8 @@ const fs = require('fs');
 const logging = require('./middleware/logging');
 const rateLimit = require('./middleware/rateLimit');
 const redis = require('./module/redisClient');
+const mongoClient = require('./module/mongoClient');
+const { swaggerUi, specs } = require('./module/swagger');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -28,6 +30,7 @@ const options = {
     cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem')
 };
 redis.connect();
+mongoClient.connect();
 
 //middleware
 app.use(express.json());
@@ -50,6 +53,7 @@ app.use('/achieve', achieveApi);
 app.use('/tetris', tetrisApi);
 app.use('/block', blockApi);
 app.use('/admin', adminApi);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 //serve FILE
 app.get('*', (req, res) => {

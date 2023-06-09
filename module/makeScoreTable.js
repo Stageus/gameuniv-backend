@@ -14,7 +14,8 @@ module.exports = (years, month, gameType = '2048') => {
                                             rank_idx SERIAL NOT NULL,
                                             user_email varchar(320) not null,
                                             game_score int not null,
-                                            creation_time TIMESTAMP not null default CURRENT_TIMESTAMP
+                                            creation_time TIMESTAMP not null default CURRENT_TIMESTAMP,
+                                            CONSTRAINT game_${gameType}_${years}${month}_email_f_key FOREIGN KEY (user_email) REFERENCES user_tb(email) ON DELETE CASCADE
                                         )
                                         `;
                await pgPool.query(createTableSql);

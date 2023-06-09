@@ -218,6 +218,7 @@ router.post('/score', loginAuth, async (req ,res) => {
                                         1
                                     `;
             const selectRankResult = await pgPool.query(selectRankSql, [score]);
+
             if(selectRankResult.rows[0]){
                 if(selectRankResult.rows[0].game_score == score){
                     result.data.rank = selectRankResult.rows[0].rank;
@@ -299,7 +300,7 @@ router.get('/score/rank', loginAuth, async (req, res) => {
             //SELECT pre
             const selectPreSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
-                                        game_score pre_max_score,
+                                        game_score AS pre_max_score,
                                         university_name AS pre_university_name,
                                         user_name AS pre_user_name
                                     FROM

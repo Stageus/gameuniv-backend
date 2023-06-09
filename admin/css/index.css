@@ -7,6 +7,10 @@ main{
     justify-content: center;
     align-items: center;
 }
+header{
+    width: 1200px;
+    margin: 0 auto;
+}
 section{
     width: 1200px;
     min-height: 400px;
@@ -22,6 +26,7 @@ section{
     align-items: center;
 }
 .user_item{
+    position: relative;
     display: flex;
     padding-bottom: 30px;
     margin-top: 30px;
@@ -33,10 +38,72 @@ section{
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
     background-color: rgba(0, 0, 0, 0.3);
 }
 .profile_img_container img{
     width: 100%;
+}
+
+.email_container::before{
+    content: "이메일 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.id_container::before{
+    content: "아이디 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.university_name_container::before{
+    content: "대학교 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.coin_container::before{
+    content: "코인 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.game_2048_game_count_container::before{
+    content: "2048 판 수 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.tetris_game_count_container::before{
+    content: "테트리스 판 수 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.is_delete_container::before{
+    content: "계정 삭제일 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+.block_state_container::before{
+    content: "계정 정지일 : ";
+    font-size: 20px;
+    font-weight: bolder;
+}
+
+.button_container{
+    position: absolute;
+    display: flex;
+    bottom: 0px;
+    height: 40px;
+    width: 180px;
+}
+.button_container button{
+    width: 90px;
+    border-radius: 6px;
+    font-size: 20px;
+    font-weight: bolder;
+    cursor: pointer;
+}
+.block_btn{
+    border: 2px solid red;
+}
+.delete_block_btn{
+    border: 2px solid green;
 }

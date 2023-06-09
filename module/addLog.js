@@ -1,4 +1,4 @@
-const mongodb = require('mongodb').MongoClient;
+const mongoClient = require('../module/mongoClient');
 const verifyToken = require('../module/verifyToken');
 const url = require('url');
 const logstash = require('../module/logstash');
@@ -9,8 +9,7 @@ module.exports = (req, res, result) => {
         logstash(req, res, result);
 
         try{
-            const DB = await mongodb.connect("mongodb://localhost:27017");
-            await DB.db('gameuniv').collection("log").insertOne({
+            await mongoClient.db('gameuniv').collection("log").insertOne({
                 ip : req.ip, // user ip
                 req_user_email : verifyToken(req.cookies.token)?.data?.email || '', // user email
                 method : req.method, // req method
@@ -22,7 +21,8 @@ module.exports = (req, res, result) => {
                 status_code : res.statusCode || 409, // status code
                 result : JSON.stringify(result || {}) // result obj
             });
-            DB.close();
+
+            resolve(1);
         }catch(err){
             console.log(err);
         }

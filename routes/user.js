@@ -16,7 +16,6 @@ router.get('/id/duplication', async (req ,res) => {
     let statusCode = 200;
 
     //validaion check
-    console.log(userIdRegExp.test(inputId));
     if(!userIdRegExp.test(inputId)){
         result.message = 'id값이 유효하지 않습니다.';
         statusCode = 400;
