@@ -24,10 +24,10 @@ const adminApi = require('./routes/admin');
 
 //setting
 dotenv.config();
-const options = { 
-    ca: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/fullchain.pem'),
-    key: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem')
+const options = {
+  ca: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/fullchain.pem'),
+  key: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem'),
 };
 redis.connect();
 mongoClient.connect();
@@ -38,10 +38,12 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'gameuniv-react', 'build')));
 app.use(logging());
 app.use(rateLimit);
-app.use(cors({
-    origin : ['http://gameuniv.site', 'http://localhost:3000'],
-    credentials : true
-}));
+app.use(
+  cors({
+    origin: ['http://gameuniv.site', 'http://localhost:3000'],
+    credentials: true,
+  })
+);
 
 //routes
 app.use('/auth', authApi);
@@ -57,14 +59,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 //serve FILE
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'gameuniv-react', 'build', 'index.html')); 
+  res.sendFile(path.join(__dirname, '..', 'gameuniv-react', 'build', 'index.html'));
 });
 
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
-    console.log(`server on port : ${process.env.HTTP_PORT}`);
+  console.log(`server on port : ${process.env.HTTP_PORT}`);
 });
 
 https.createServer(options, app).listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
-    console.log(`server on port : ${process.env.HTTPS_PORT}`);
+  console.log(`server on port : ${process.env.HTTPS_PORT}`);
 });
