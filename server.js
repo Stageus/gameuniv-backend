@@ -27,13 +27,13 @@ const sslConfig = require('./config/sslConfig');
 //setting
 dotenv.config();
 redis.connect();
-mongoClient.connect();
+//mongoClient.connect();
 
 //middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'gameuniv-react', 'build')));
-app.use(logging());
+//app.use(logging());
 app.use(rateLimit);
 app.use(
   cors({
