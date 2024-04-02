@@ -57,7 +57,7 @@ app.use('/block', blockApi);
 app.use('/admin', adminApi);
 
 //serve FILE
-app.get('*', (req, res) => {
+app.get((req, res) => {
   res.sendFile(path.join(__dirname, '..', 'gameuniv-react', 'build', 'index.html'));
 });
 
