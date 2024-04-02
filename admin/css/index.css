@@ -1,109 +1,109 @@
-body{
-    margin: 0;  
+body {
+  margin: 0;
 }
-main{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
-header{
-    width: 1200px;
-    margin: 0 auto;
+header {
+  width: 1200px;
+  margin: 0 auto;
 }
-section{
-    width: 1200px;
-    min-height: 400px;
-    background-color: #eee;
-    border-radius: 12px;
-    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.3);
-    padding-bottom: 30px;
-}
-
-.user_container{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.user_item{
-    position: relative;
-    display: flex;
-    padding-bottom: 30px;
-    margin-top: 30px;
-    width: calc(100% - 60px);
-    border-bottom: 2px solid black;
-}
-.profile_img_container{
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 180px;
-    height: 180px;
-    background-color: rgba(0, 0, 0, 0.3);
-}
-.profile_img_container img{
-    width: 100%;
+section {
+  width: 1200px;
+  min-height: 400px;
+  background-color: #eee;
+  border-radius: 12px;
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.3);
+  padding-bottom: 30px;
 }
 
-.email_container::before{
-    content: "이메일 : ";
-    font-size: 20px;
-    font-weight: bolder;
+.user_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.id_container::before{
-    content: "아이디 : ";
-    font-size: 20px;
-    font-weight: bolder;
+.user_item {
+  position: relative;
+  display: flex;
+  padding-bottom: 30px;
+  margin-top: 30px;
+  width: calc(100% - 60px);
+  border-bottom: 2px solid black;
 }
-.university_name_container::before{
-    content: "대학교 : ";
-    font-size: 20px;
-    font-weight: bolder;
+.profile_img_container {
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 180px;
+  background-color: rgba(0, 0, 0, 0.3);
 }
-.coin_container::before{
-    content: "코인 : ";
-    font-size: 20px;
-    font-weight: bolder;
-}
-.game_2048_game_count_container::before{
-    content: "2048 판 수 : ";
-    font-size: 20px;
-    font-weight: bolder;
-}
-.tetris_game_count_container::before{
-    content: "테트리스 판 수 : ";
-    font-size: 20px;
-    font-weight: bolder;
-}
-.is_delete_container::before{
-    content: "계정 삭제일 : ";
-    font-size: 20px;
-    font-weight: bolder;
-}
-.block_state_container::before{
-    content: "계정 정지일 : ";
-    font-size: 20px;
-    font-weight: bolder;
+.profile_img_container img {
+  width: 100%;
 }
 
-.button_container{
-    position: absolute;
-    display: flex;
-    bottom: 0px;
-    height: 40px;
-    width: 180px;
+.email_container::before {
+  content: '이메일 : ';
+  font-size: 20px;
+  font-weight: bolder;
 }
-.button_container button{
-    width: 90px;
-    border-radius: 6px;
-    font-size: 20px;
-    font-weight: bolder;
-    cursor: pointer;
+.id_container::before {
+  content: '아이디 : ';
+  font-size: 20px;
+  font-weight: bolder;
 }
-.block_btn{
-    border: 2px solid red;
+.university_name_container::before {
+  content: '대학교 : ';
+  font-size: 20px;
+  font-weight: bolder;
 }
-.delete_block_btn{
-    border: 2px solid green;
+.coin_container::before {
+  content: '코인 : ';
+  font-size: 20px;
+  font-weight: bolder;
+}
+.game_2048_game_count_container::before {
+  content: '2048 판 수 : ';
+  font-size: 20px;
+  font-weight: bolder;
+}
+.tetris_game_count_container::before {
+  content: '테트리스 판 수 : ';
+  font-size: 20px;
+  font-weight: bolder;
+}
+.is_delete_container::before {
+  content: '계정 삭제일 : ';
+  font-size: 20px;
+  font-weight: bolder;
+}
+.block_state_container::before {
+  content: '계정 정지일 : ';
+  font-size: 20px;
+  font-weight: bolder;
+}
+
+.button_container {
+  position: absolute;
+  display: flex;
+  bottom: 0px;
+  height: 40px;
+  width: 180px;
+}
+.button_container button {
+  width: 90px;
+  border-radius: 6px;
+  font-size: 20px;
+  font-weight: bolder;
+  cursor: pointer;
+}
+.block_btn {
+  border: 2px solid red;
+}
+.delete_block_btn {
+  border: 2px solid green;
 }

@@ -1,14 +1,14 @@
 const pgPool = require('./pgPool');
 
 module.exports = (years, month, gameType = '2048') => {
-    return new Promise(async (resolve, reject) => {
-        if(gameType != '2048' && gameType !== 'tetris'){
-            reject({
-                err : 'invalid tetris'
-            })
-        }else{
-            try{
-                const createTableSql = `CREATE TABLE
+  return new Promise(async (resolve, reject) => {
+    if (gameType != '2048' && gameType !== 'tetris') {
+      reject({
+        err: 'invalid tetris',
+      });
+    } else {
+      try {
+        const createTableSql = `CREATE TABLE
                                             game_${gameType}_${years}${month}_rank_tb
                                         (
                                             rank_idx SERIAL NOT NULL,
@@ -18,14 +18,16 @@ module.exports = (years, month, gameType = '2048') => {
                                             CONSTRAINT game_${gameType}_${years}${month}_email_f_key FOREIGN KEY (user_email) REFERENCES user_tb(email) ON DELETE CASCADE
                                         )
                                         `;
-               await pgPool.query(createTableSql);
+        await pgPool.query(createTableSql);
 
-               await pgPool.query(`CREATE INDEX game_${gameType}_${years}${month}_index ON game_${gameType}_${years}${month}_rank_tb (game_score)`);
-    
-               resolve(1);
-            }catch(err){
-                reject(err);
-            }
-        }
-    });
-}
+        await pgPool.query(
+          `CREATE INDEX game_${gameType}_${years}${month}_index ON game_${gameType}_${years}${month}_rank_tb (game_score)`
+        );
+
+        resolve(1);
+      } catch (err) {
+        reject(err);
+      }
+    }
+  });
+};

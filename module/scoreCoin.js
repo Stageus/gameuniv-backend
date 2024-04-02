@@ -1,3 +1,3 @@
 module.exports = (score) => {
-    return parseInt(parseInt(score) / 1000);
-}
+  return parseInt(parseInt(score) / 1000);
+};

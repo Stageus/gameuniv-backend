@@ -1,4 +1,4 @@
 module.exports = {
-    sameSite : 'none',
-    secure : true
-}
+  sameSite: 'none',
+  secure: true,
+};

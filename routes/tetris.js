@@ -7,27 +7,27 @@ const redis = require('../module/redisClient');
 const insertRankScore = require('../module/insertRankScore');
 
 router.get('/record/all', async (req, res) => {
-    //from FE
-    const offset = req.query.offset || 0;
-    const today = new Date();
-    today.setHours(today.getHours() + 9);
-    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
+  //from FE
+  const offset = req.query.offset || 0;
+  const today = new Date();
+  today.setHours(today.getHours() + 9);
+  const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
-    //to FE
-    const result = {};
-    let statusCode = 200;
+  //to FE
+  const result = {};
+  let statusCode = 200;
 
-    //validaion check
-    if(offset < 0){
-        statusCode = 400;
-        result.message = 'offset값이 유효하지 않습니다.';
-    }
+  //validaion check
+  if (offset < 0) {
+    statusCode = 400;
+    result.message = 'offset값이 유효하지 않습니다.';
+  }
 
-    //main
-    if(statusCode === 200){
-        try{
-            //SELECT rank
-            const selectRankSql = `SELECT 
+  //main
+  if (statusCode === 200) {
+    try {
+      //SELECT rank
+      const selectRankSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
                                         game_score AS max_score,
                                         user_name AS user_name,
@@ -50,39 +50,39 @@ router.get('/record/all', async (req, res) => {
                                     OFFSET
                                         $1 * 100
                                     `;
-            const selectRankResult = await pgPool.query(selectRankSql, [offset]);
+      const selectRankResult = await pgPool.query(selectRankSql, [offset]);
 
-            result.data = selectRankResult.rows;
-        }catch(err){
-            console.log(err);
+      result.data = selectRankResult.rows;
+    } catch (err) {
+      console.log(err);
 
-            if(err.code === '42P01'){
-                result.data = [];
-            }else{
-                result.message = '예상하지 못한 에러가 발생했습니다.';
-                statusCode = 409;
-            }
-        }
+      if (err.code === '42P01') {
+        result.data = [];
+      } else {
+        result.message = '예상하지 못한 에러가 발생했습니다.';
+        statusCode = 409;
+      }
     }
+  }
 
-    //send result
-    res.status(statusCode).send(result);
+  //send result
+  res.status(statusCode).send(result);
 });
 
 router.get('/record/:email', async (req, res) => {
-    //from FE
-    const userEmail = req.params.email;
-    const today = new Date();
-    today.setHours(today.getHours() + 9);
-    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
+  //from FE
+  const userEmail = req.params.email;
+  const today = new Date();
+  today.setHours(today.getHours() + 9);
+  const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
-    //to FE
-    const result = {};
-    let statusCode = 200;
+  //to FE
+  const result = {};
+  let statusCode = 200;
 
-    //main
-    try{
-        const selectRankSql = `SELECT
+  //main
+  try {
+    const selectRankSql = `SELECT
                                     rank,
                                     game_score AS max_score
                                 FROM
@@ -103,95 +103,98 @@ router.get('/record/:email', async (req, res) => {
                                 WHERE
                                     user_email = $1
                                 `;
-        const selectRankResult = await pgPool.query(selectRankSql, [userEmail]);
+    const selectRankResult = await pgPool.query(selectRankSql, [userEmail]);
 
-        result.data = selectRankResult.rows[0] || {
-            rank : -2
-        };
-    }catch(err){
-        console.log(err);
+    result.data = selectRankResult.rows[0] || {
+      rank: -2,
+    };
+  } catch (err) {
+    console.log(err);
 
-        if(err.code === '42P01'){
-            result.data = {
-                rank : -2
-            };
-        }else{
-            result.message = '예상하지 못한 에러가 발생했습니다.';
-            statusCode = 409;
-        }
+    if (err.code === '42P01') {
+      result.data = {
+        rank: -2,
+      };
+    } else {
+      result.message = '예상하지 못한 에러가 발생했습니다.';
+      statusCode = 409;
     }
-    
-    //send result
-    res.status(statusCode).send(result);
+  }
+
+  //send result
+  res.status(statusCode).send(result);
 });
 
 router.post('/score', loginAuth, async (req, res) => {
-    //from FE
-    const score = req.body.score || 0;
-    const loginUserEmail = req.user.email;
-    const coin = scoreCoint(score);
-    const today = new Date();
-    today.setHours(today.getHours() + 9);
-    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
+  //from FE
+  const score = req.body.score || 0;
+  const loginUserEmail = req.user.email;
+  const coin = scoreCoint(score);
+  const today = new Date();
+  today.setHours(today.getHours() + 9);
+  const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
-    //to FE
-    const result = { data : { achieveList : [] } };
-    let statusCode = 200;
+  //to FE
+  const result = { data: { achieveList: [] } };
+  let statusCode = 200;
 
-    //validaion check
-    if(score < 0){
-        statusCode = 400;
-        result.message = 'score값이 유효하지 않습니다.';
-    }
-    try{
-        const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
-        await redis.del(`tetris_score_${loginUserEmail}`);
-        
-        if(curScore != score){
-            statusCode = 403;
-            result.message = 'score error';
+  //validaion check
+  if (score < 0) {
+    statusCode = 400;
+    result.message = 'score값이 유효하지 않습니다.';
+  }
+  try {
+    const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
+    await redis.del(`tetris_score_${loginUserEmail}`);
 
-            try{
-                //INSERT suspected user
-                const isnertSuspUserSql = 'INSERT INTO suspected_user_tb ( suspected_user_email, game_type ) VALUES ( $1, $2 )';
-                await pgPool.query(isnertSuspUserSql, [loginUserEmail, 'tetris']);
-            }catch(err){
-                console.log(err);
-            }
-        }
-    }catch(err){
+    if (curScore != score) {
+      statusCode = 403;
+      result.message = 'score error';
+
+      try {
+        //INSERT suspected user
+        const isnertSuspUserSql =
+          'INSERT INTO suspected_user_tb ( suspected_user_email, game_type ) VALUES ( $1, $2 )';
+        await pgPool.query(isnertSuspUserSql, [loginUserEmail, 'tetris']);
+      } catch (err) {
         console.log(err);
-
-        statusCode = 409;
-        result.message = '예상하지 못한 에러가 발생했습니다.';
+      }
     }
+  } catch (err) {
+    console.log(err);
 
-    //main
-    if(statusCode === 200){
-        const pgClient = await pgPool.connect();
-        try{
-            //BEGIN
-            await pgClient.query('BEGIN');
+    statusCode = 409;
+    result.message = '예상하지 못한 에러가 발생했습니다.';
+  }
 
-            //INSERT score
-            const inserttetrisRecordSql = 'INSERT INTO game_tetris_record_tb (user_email, game_score) VALUES ($1, $2)';
-            await pgClient.query(inserttetrisRecordSql, [loginUserEmail, score]);
+  //main
+  if (statusCode === 200) {
+    const pgClient = await pgPool.connect();
+    try {
+      //BEGIN
+      await pgClient.query('BEGIN');
 
-            //UPDATE coin
-            const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1, game_tetris_count = game_tetris_count + 1 WHERE email = $2';
-            await pgClient.query(updateCoinSql, [coin, loginUserEmail]);
+      //INSERT score
+      const inserttetrisRecordSql =
+        'INSERT INTO game_tetris_record_tb (user_email, game_score) VALUES ($1, $2)';
+      await pgClient.query(inserttetrisRecordSql, [loginUserEmail, score]);
 
-            //COMMIT
-            await pgClient.query('COMMIT');
+      //UPDATE coin
+      const updateCoinSql =
+        'UPDATE user_tb SET coin = coin + $1, game_tetris_count = game_tetris_count + 1 WHERE email = $2';
+      await pgClient.query(updateCoinSql, [coin, loginUserEmail]);
 
-            //insert rank data
-            await insertRankScore(score, loginUserEmail, 'tetris');
+      //COMMIT
+      await pgClient.query('COMMIT');
 
-            //achieve list
-            const achieveList = await achieve(loginUserEmail, score, 'tetris');
+      //insert rank data
+      await insertRankScore(score, loginUserEmail, 'tetris');
 
-            //SELECT rank
-            const selectRankSql = `SELECT 
+      //achieve list
+      const achieveList = await achieve(loginUserEmail, score, 'tetris');
+
+      //SELECT rank
+      const selectRankSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS rank,
                                         game_score,
                                         user_email,
@@ -218,86 +221,91 @@ router.post('/score', loginAuth, async (req, res) => {
                                     LIMIT
                                         1
                                     `;
-            const selectRankResult = await pgPool.query(selectRankSql, [score]);
-            if(selectRankResult.rows[0]){
-                if(selectRankResult.rows[0].game_score == score){
-                    result.data.rank = selectRankResult.rows[0].rank;
-                }else{
-                    result.data.rank = selectRankResult.rows[0].rank + 1;
-                }
-            }else{
-                result.data.rank = 1;
-            }
-
-            result.data.coin = coin;
-
-            //insert achieve
-            for(const achieveData of achieveList){
-                try{
-                    const achieveIdx = achieveData.achieveIdx;
-
-                    //INSERT user achieve
-                    const insertAchSql = 'INSERT INTO user_achieve_tb (user_email, achieve_idx) VALUES ($1, $2)';
-                    await pgClient.query(insertAchSql, [loginUserEmail, achieveIdx]);
-
-                    //SELECT reward coin
-                    const selectRewardCoinSql = 'SELECT achieve_reward_coin AS reward_coin, achieve_reward_img AS reward_img, achieve_name FROM achieve_tb WHERE achieve_idx = $1';
-                    const selectRewardCoinResult = await pgClient.query(selectRewardCoinSql, [achieveIdx]);
-
-                    result.data.achieveList.push({
-                        ...selectRewardCoinResult.rows[0]
-                    });
-
-                    //UPDATE coin
-                    const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1 WHERE email = $2';
-                    await pgClient.query(updateCoinSql, [selectRewardCoinResult.rows[0].reward_coin, loginUserEmail]);
-                }catch(err){
-                    console.log(err);
-                }
-            }
-        }catch(err){
-            console.log(err);
-            
-            await pgClient.query('ROLLBACK');
-
-            result.status = 409;
-            result.message = '예상하지 못한 에러가 발생했습니다.';
-        }finally{
-            await pgClient.release();
+      const selectRankResult = await pgPool.query(selectRankSql, [score]);
+      if (selectRankResult.rows[0]) {
+        if (selectRankResult.rows[0].game_score == score) {
+          result.data.rank = selectRankResult.rows[0].rank;
+        } else {
+          result.data.rank = selectRankResult.rows[0].rank + 1;
         }
-    }
+      } else {
+        result.data.rank = 1;
+      }
 
-    //send result
-    res.status(statusCode).send(result);
+      result.data.coin = coin;
+
+      //insert achieve
+      for (const achieveData of achieveList) {
+        try {
+          const achieveIdx = achieveData.achieveIdx;
+
+          //INSERT user achieve
+          const insertAchSql =
+            'INSERT INTO user_achieve_tb (user_email, achieve_idx) VALUES ($1, $2)';
+          await pgClient.query(insertAchSql, [loginUserEmail, achieveIdx]);
+
+          //SELECT reward coin
+          const selectRewardCoinSql =
+            'SELECT achieve_reward_coin AS reward_coin, achieve_reward_img AS reward_img, achieve_name FROM achieve_tb WHERE achieve_idx = $1';
+          const selectRewardCoinResult = await pgClient.query(selectRewardCoinSql, [achieveIdx]);
+
+          result.data.achieveList.push({
+            ...selectRewardCoinResult.rows[0],
+          });
+
+          //UPDATE coin
+          const updateCoinSql = 'UPDATE user_tb SET coin = coin + $1 WHERE email = $2';
+          await pgClient.query(updateCoinSql, [
+            selectRewardCoinResult.rows[0].reward_coin,
+            loginUserEmail,
+          ]);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+
+      await pgClient.query('ROLLBACK');
+
+      result.status = 409;
+      result.message = '예상하지 못한 에러가 발생했습니다.';
+    } finally {
+      await pgClient.release();
+    }
+  }
+
+  //send result
+  res.status(statusCode).send(result);
 });
 
 router.get('/score/rank', loginAuth, async (req, res) => {
-    //from FE
-    const score = parseInt(req.query.score) || 0;
-    req.score = parseInt(req.query.score) || '';
-    const loginUserEmail = req.user.email;
-    const today = new Date();
-    today.setHours(today.getHours() + 9);
-    const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
-    
-    //to FE
-    const result = {};
-    let statusCode = 200;
+  //from FE
+  const score = parseInt(req.query.score) || 0;
+  req.score = parseInt(req.query.score) || '';
+  const loginUserEmail = req.user.email;
+  const today = new Date();
+  today.setHours(today.getHours() + 9);
+  const tableName = `game_tetris_${today.getFullYear()}${today.getMonth()}_rank_tb`;
 
-    //validation check
-    if(score < 0){
-        statusCode = 400;
-        result.message = 'score값이 유효하지 않습니다.';
-    }
+  //to FE
+  const result = {};
+  let statusCode = 200;
 
-    //main
-    if(statusCode === 200){
-        try{
-            await redis.set(`tetris_score_${loginUserEmail}`, score);
-            await redis.expire(`tetris_score_${loginUserEmail}`, 60 * 30);
-            
-            //SELECT pre
-            const selectPreSql = `SELECT 
+  //validation check
+  if (score < 0) {
+    statusCode = 400;
+    result.message = 'score값이 유효하지 않습니다.';
+  }
+
+  //main
+  if (statusCode === 200) {
+    try {
+      await redis.set(`tetris_score_${loginUserEmail}`, score);
+      await redis.expire(`tetris_score_${loginUserEmail}`, 60 * 30);
+
+      //SELECT pre
+      const selectPreSql = `SELECT 
                                         CAST(RANK() OVER ( ORDER BY game_score DESC) AS int) AS pre_rank,
                                         game_score AS pre_max_score,
                                         university_name AS pre_university_name,
@@ -321,11 +329,13 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                     LIMIT
                                         1
                                     `;
-            const selectPreResult = await pgPool.query(selectPreSql, [score]);
-            const userRank = selectPreResult.rows?.[0]?.pre_rank ? parseInt(selectPreResult.rows[0].pre_rank) + 1 : 1;
+      const selectPreResult = await pgPool.query(selectPreSql, [score]);
+      const userRank = selectPreResult.rows?.[0]?.pre_rank
+        ? parseInt(selectPreResult.rows[0].pre_rank) + 1
+        : 1;
 
-            //SELECT rank
-            const selectNextSql = `SELECT 
+      //SELECT rank
+      const selectNextSql = `SELECT 
                                         rank + 1 AS next_rank,
                                         game_score AS next_max_score,
                                         university_name AS next_university_name,
@@ -360,29 +370,29 @@ router.get('/score/rank', loginAuth, async (req, res) => {
                                     LIMIT
                                         1
                                     `;
-            const selectNextResult = await pgPool.query(selectNextSql, [userRank]);
+      const selectNextResult = await pgPool.query(selectNextSql, [userRank]);
 
-            result.data = {
-                ...selectPreResult.rows[0],
-                ...selectNextResult.rows[0],
-                rank : userRank 
-            };
-        }catch(err){
-            if(err.code === '42P01'){
-                result.data = {
-                    rank : 1
-                }
-            }else{
-                console.log(err);
-                
-                statusCode = 409;
-                result.message = '예상하지 못한 에러가 발생했습니다.';
-            }
-        }
+      result.data = {
+        ...selectPreResult.rows[0],
+        ...selectNextResult.rows[0],
+        rank: userRank,
+      };
+    } catch (err) {
+      if (err.code === '42P01') {
+        result.data = {
+          rank: 1,
+        };
+      } else {
+        console.log(err);
+
+        statusCode = 409;
+        result.message = '예상하지 못한 에러가 발생했습니다.';
+      }
     }
+  }
 
-    //send result
-    res.status(statusCode).send(result);
+  //send result
+  res.status(statusCode).send(result);
 });
 
 module.exports = router;
