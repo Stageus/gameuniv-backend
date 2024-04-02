@@ -11,6 +11,8 @@ const rateLimit = require('./middleware/rateLimit');
 const redis = require('./module/redisClient');
 const mongoClient = require('./module/mongoClient');
 const { swaggerUi, specs } = require('./module/swagger');
+const { getMode, MODE } = require('./config/modeConfig');
+const sslConfig = require('./config/sslConfig');
 
 const authApi = require('./routes/auth');
 const userApi = require('./routes/user');
@@ -21,8 +23,6 @@ const achieveApi = require('./routes/achieve');
 const tetrisApi = require('./routes/tetris');
 const blockApi = require('./routes/block');
 const adminApi = require('./routes/admin');
-const { getMode, MODE } = require('./config/modeConfig');
-const sslConfig = require('./config/sslConfig');
 
 //setting
 dotenv.config();
