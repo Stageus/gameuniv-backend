@@ -37,7 +37,7 @@ app.use(logging());
 app.use(rateLimit);
 app.use(
   cors({
-    origin: ['http://gameuniv.site', 'http://localhost:3000'],
+    origin: ['http://gameuniv.site', 'http://localhost:3000', 'https://gameuniv.site'],
     credentials: true,
   })
 );
@@ -55,7 +55,7 @@ app.use('/admin', adminApi);
 
 //serve FILE
 app.get((req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'gameuniv-react', 'build', 'index.html'));
+  res.sendFile(path.join(process.env.BUILD_DIRECTORY, 'index.html'));
 });
 
 //listening
