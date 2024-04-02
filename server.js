@@ -55,7 +55,6 @@ app.use('/achieve', achieveApi);
 app.use('/tetris', tetrisApi);
 app.use('/block', blockApi);
 app.use('/admin', adminApi);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 //serve FILE
 app.get('*', (req, res) => {
