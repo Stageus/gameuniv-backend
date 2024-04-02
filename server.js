@@ -21,14 +21,11 @@ const achieveApi = require('./routes/achieve');
 const tetrisApi = require('./routes/tetris');
 const blockApi = require('./routes/block');
 const adminApi = require('./routes/admin');
+const { getMode, MODE } = require('./config/modeConfig');
+const sslConfig = require('./config/sslConfig');
 
 //setting
 dotenv.config();
-const options = {
-  ca: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/fullchain.pem'),
-  key: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/gameuniv.site/cert.pem'),
-};
 redis.connect();
 mongoClient.connect();
 
@@ -66,6 +63,8 @@ app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
   console.log(`server on port : ${process.env.HTTP_PORT}`);
 });
 
-https.createServer(options, app).listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
-  console.log(`server on port : ${process.env.HTTPS_PORT}`);
-});
+if (getMode() === MODE.PRODUCT) {
+  https.createServer(sslConfig(), app).listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
+    console.log(`server on port : ${process.env.HTTPS_PORT}`);
+  });
+}
