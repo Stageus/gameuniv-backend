@@ -58,6 +58,10 @@ app.get((req, res) => {
   res.sendFile(path.join(process.env.BUILD_DIRECTORY, 'index.html'));
 });
 
+app.use((req, res) => {
+  res.sendFile(path.join(process.env.BUILD_DIRECTORY, 'index.html'));
+});
+
 //listening
 app.listen(process.env.HTTP_PORT, '0.0.0.0', () => {
   console.log(`server on port : ${process.env.HTTP_PORT}`);
