@@ -71,7 +71,7 @@ makeUserItem = (userData) => {
   buttonContainer.append(blockDelBtn);
 
   const profileImg = document.createElement('img');
-  profileImg.src = `https://jochong.s3.ap-northeast-2.amazonaws.com/gameuniv_user_profile/${userProfileImg}`;
+  profileImg.src = `https://gameuniv.s3.ap-southeast-2.amazonaws.com/gameuniv_user_profile/${userProfileImg}`;
 
   const profileImgContainer = document.createElement('div');
   profileImgContainer.classList.add('profile_img_container');
