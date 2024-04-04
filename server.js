@@ -33,7 +33,7 @@ redis.connect();
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'gameuniv-react', 'build')));
-//app.use(logging());
+app.use(logging());
 app.use(rateLimit);
 app.use(
   cors({
