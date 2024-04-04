@@ -179,8 +179,16 @@ router.post('/email/number', async (req, res) => {
       const selectUserResult = await pgPool.query(selectUserSql, [email]);
 
       if (!selectUserResult.rows?.[0]?.block_state) {
-        const selectUniSql =
-          'SELECT university_address_name FROM university_tb JOIN university_address_tb ON university_tb.university_idx = university_address_tb.university_idx WHERE university_name = $1';
+        const selectUniSql = `SELECT 
+                                university_address_name 
+                              FROM 
+                                university_tb 
+                              JOIN 
+                                university_address_tb 
+                              ON 
+                                university_tb.university_idx = university_address_tb.university_idx 
+                              WHERE 
+                                university_name = $1`;
         const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
 
         if (
