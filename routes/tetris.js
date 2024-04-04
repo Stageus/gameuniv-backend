@@ -143,29 +143,6 @@ router.post('/score', loginAuth, async (req, res) => {
     statusCode = 400;
     result.message = 'score값이 유효하지 않습니다.';
   }
-  try {
-    const curScore = await redis.get(`tetris_score_${loginUserEmail}`);
-    await redis.del(`tetris_score_${loginUserEmail}`);
-
-    if (curScore != score) {
-      statusCode = 403;
-      result.message = 'score error';
-
-      try {
-        //INSERT suspected user
-        const isnertSuspUserSql =
-          'INSERT INTO suspected_user_tb ( suspected_user_email, game_type ) VALUES ( $1, $2 )';
-        await pgPool.query(isnertSuspUserSql, [loginUserEmail, 'tetris']);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  } catch (err) {
-    console.log(err);
-
-    statusCode = 409;
-    result.message = '예상하지 못한 에러가 발생했습니다.';
-  }
 
   //main
   if (statusCode === 200) {
