@@ -202,6 +202,7 @@ router.post(
   })
 );
 
+// 로그아웃하기
 router.delete('/', loginAuth, (req, res) => {
   res.clearCookie('token');
   res.status(200).send({});
