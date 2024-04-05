@@ -2,6 +2,7 @@ const router = require('express').Router();
 const loginAuth = require('../middleware/loginAuth');
 const pgPool = require('../module/pgPool');
 const verifyToken = require('../module/verifyToken');
+const wrapper = require('../module/wrapper');
 
 router.get('/all', async (req, res) => {
   //from FE
@@ -91,32 +92,37 @@ router.get('/all', async (req, res) => {
   res.status(statusCode).send(result);
 });
 
-router.get('/buy/all', loginAuth, async (req, res) => {
-  //from FE
-  const loginUserEmail = req.user.email;
+// 구매한 아이템 모두 가져오기
+router.get(
+  '/buy/all',
+  loginAuth,
+  wrapper(async (req, res) => {
+    const loginUserEmail = req.user.email;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
+    const selectItemResult = await pgPool.query(
+      `SELECT 
+        item_owner_tb.item_idx, 
+        item_name, 
+        preview_img, 
+        detail_img, 
+        item_price 
+      FROM 
+        item_owner_tb 
+      JOIN 
+        item_tb 
+      ON 
+        item_tb.item_idx = item_owner_tb.item_idx 
+      WHERE 
+        item_owner_tb.user_email = $1`,
+      [loginUserEmail]
+    );
+    const items = selectItemResult.rows;
 
-  //main
-  try {
-    //SELECT item
-    const selectItemSql =
-      'SELECT item_owner_tb.item_idx, item_name, preview_img, detail_img, item_price FROM item_owner_tb JOIN item_tb ON item_tb.item_idx = item_owner_tb.item_idx WHERE item_owner_tb.user_email = $1';
-    const selectItemResult = await pgPool.query(selectItemSql, [loginUserEmail]);
-
-    result.data = selectItemResult.rows;
-  } catch (err) {
-    console.log(err);
-
-    result.message = '예상하지 못한 에러가 발생했습니다.';
-    statusCode = 409;
-  }
-
-  //send result
-  res.status(statusCode).send(result);
-});
+    res.status(200).send({
+      data: items,
+    });
+  })
+);
 
 router.get('/pick/all', loginAuth, async (req, res) => {
   //from FE
