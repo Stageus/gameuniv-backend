@@ -245,45 +245,29 @@ router.post(
   })
 );
 
+// 아이템 찜하기
 router.post('/pick', loginAuth, async (req, res) => {
-  //from FE
   const inputItemIdx = req.body.itemIdx || -1;
-  const loginUserEmail = req.user.email;
+  const loginUser = req.user;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
-
-  //validaion check
   if (inputItemIdx < 0) {
-    statusCode = 400;
-    result.message = '해당 아이템은 존재하지 않습니다.';
+    throw new BadRequestException('해당 아이템은 존재하지 않습니다.');
   }
 
-  //main
-  if (statusCode === 200) {
-    try {
-      //INSERT
-      const insertPickSql = 'INSERT INTO item_pick_tb (user_email, item_idx) VALUES ($1, $2)';
-      await pgPool.query(insertPickSql, [loginUserEmail, inputItemIdx]);
-    } catch (err) {
-      console.log(err);
+  try {
+    await pgPool.query('INSERT INTO item_pick_tb (user_email, item_idx) VALUES ($1, $2)', [
+      loginUser.email,
+      inputItemIdx,
+    ]);
+  } catch (err) {
+    if (err.code === '23505') throw new ForbiddenException('이미 찜한 아이템입니다.');
 
-      if (err.code === '23505') {
-        statusCode = 403;
-        result.message = '이미 찜한 아이템입니다.';
-      } else if (err.code === '23503') {
-        statusCode = 404;
-        result.message = '해당 아이템은 존재하지 않습니다.';
-      } else {
-        statusCode = 409;
-        result.message = '예상하지 못한 에러가 발생했습니다.';
-      }
-    }
+    if (err.code === '23503') throw new NotFoundException('해당 아이템은 존재하지 않습니다.');
+
+    throw err;
   }
 
-  //send result
-  res.status(statusCode).send(result);
+  res.status(statusCode).send({});
 });
 
 router.delete('/pick', loginAuth, async (req, res) => {
