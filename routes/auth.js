@@ -8,46 +8,47 @@ const pwHash = require('../module/pwHash');
 const makeToken = require('../module/makeToken');
 const cookieConfig = require('../config/cookieConfig');
 const loginAuth = require('../middleware/loginAuth');
+const wrapper = require('../module/wrapper');
+const { ServerErrorException } = require('../module/Exception');
 
-router.get('/user', loginAuth, async (req, res) => {
-  //from FE
-  const loginUserEmail = req.user.email;
+// 로그인 사용자 정보 가져오기
+router.get(
+  '/user',
+  loginAuth,
+  wrapper(async (req, res) => {
+    const loginUser = req.user;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
+    const selectUserResult = await pgPool.query(
+      `SELECT 
+        user_name, 
+        email, 
+        profile_img, 
+        university_name 
+      FROM 
+        user_tb 
+      JOIN 
+        university_tb 
+      ON 
+        university_tb.university_idx = user_tb.university_idx 
+      WHERE 
+        email = $1`,
+      [loginUser.email]
+    );
+    const user = selectUserResult.rows[0];
 
-  //main
-  try {
-    //SELECT user
-    const selectUserSql =
-      'SELECT user_name, email, profile_img, university_name FROM user_tb JOIN university_tb ON university_tb.university_idx = user_tb.university_idx WHERE email = $1';
-    const selectUserResult = await pgPool.query(selectUserSql, [loginUserEmail]);
-
-    if (selectUserResult.rows?.[0]) {
-      result.data = {
-        user_name: selectUserResult.rows[0].user_name,
-        email: selectUserResult.rows[0].email,
-        profileImg: selectUserResult.rows[0].profile_img,
-        universityName: selectUserResult.rows[0].university_name,
-      };
-    } else {
+    if (!user) {
       res.clearCookie('token');
+      throw new ServerErrorException('사용자를 찾을 수 없습니다.');
     }
-  } catch (err) {
-    console.log(err);
 
-    result.data = {
-      id: req.user.id,
-      email: req.user.email,
-      profileImg: req.user.profileImg,
-      universityName: req.user.universityName,
-    };
-  }
-
-  //send result
-  res.status(statusCode).send(result);
-});
+    res.status(200).send({
+      user_name: user.user_name,
+      email: user.email,
+      profileImg: user.profile_img,
+      universityName: user.university_name,
+    });
+  })
+);
 
 router.post('/', async (req, res) => {
   //from FE
