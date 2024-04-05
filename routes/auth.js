@@ -13,6 +13,7 @@ const {
   ServerErrorException,
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
 } = require('../module/Exception');
 
 // 로그인 사용자 정보 가져오기
@@ -142,74 +143,64 @@ router.get(
   })
 );
 
-router.post('/email/number', async (req, res) => {
-  //from FE
-  const email = req.body.email;
-  const universityName = req.body.universityName;
+// 이메일 인증번호 발송하기
+router.post(
+  '/email/number',
+  wrapper(async (req, res) => {
+    const email = req.body.email;
+    const universityName = req.body.universityName;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
-
-  //validaion check
-  if (!userEmailRegExp.test(email)) {
-    statusCode = 400;
-    result.message = '이메일이 유효하지 않습니다.';
-  }
-  if (!universityName || universityName.length > 32) {
-    statusCode = 400;
-    result.message = '대학이름이 유효하지 않습니다.';
-  }
-
-  //main
-  if (statusCode === 200) {
-    try {
-      const selectUserSql = 'SELECT block_state FROM user_tb WHERE email = $1';
-      const selectUserResult = await pgPool.query(selectUserSql, [email]);
-
-      if (!selectUserResult.rows?.[0]?.block_state) {
-        const selectUniSql = `SELECT 
-                                university_address_name 
-                              FROM 
-                                university_tb 
-                              JOIN 
-                                university_address_tb 
-                              ON 
-                                university_tb.university_idx = university_address_tb.university_idx 
-                              WHERE 
-                                university_name = $1`;
-        const selectUniResult = await pgPool.query(selectUniSql, [universityName]);
-
-        if (
-          selectUniResult.rows
-            .map((data) => data.university_address_name)
-            .includes(email.split('@')[1])
-        ) {
-          const randomNumber = makeRandomNumber(6);
-
-          await redis.set(`${email}-auth-number`, randomNumber);
-          await redis.expire(`${email}-auth-number`, 60 * 3);
-
-          await sendEmail(email, randomNumber);
-        } else {
-          statusCode = 404;
-          result.message = '이메일 주소가 학교 이메일 주소와 다릅니다.';
-        }
-      } else {
-        statusCode = 403;
-        result.message = '계정이 정지되어있습니다.';
-      }
-    } catch (err) {
-      console.log(err);
-
-      statusCode = 409;
-      result.message = '예상하지 못한 에러가 발생했습니다.';
+    if (!userEmailRegExp.test(email)) {
+      throw new BadRequestException('이메일이 유효하지 않습니다.');
     }
-  }
+    if (!universityName || universityName.length > 32) {
+      throw new BadRequestException('대학이름이 유효하지 않습니다.');
+    }
 
-  //send result
-  res.status(statusCode).send(result);
-});
+    const selectUserResult = await pgPool.query(
+      `SELECT 
+        block_state AS "blockState"
+      FROM 
+        user_tb 
+      WHERE 
+        email = $1`,
+      [email]
+    );
+    const user = selectUserResult.rows[0];
+
+    if (user?.blockState) {
+      throw new ForbiddenException('계정이 정지되었습니다.');
+    }
+
+    const selectUniResult = await pgPool.query(
+      `SELECT 
+        university_address_name AS "universityAddressName"
+      FROM 
+        university_tb 
+      JOIN 
+        university_address_tb 
+      ON 
+        university_tb.university_idx = university_address_tb.university_idx 
+      WHERE 
+        university_name = $1`,
+      [universityName]
+    );
+    const allowEmailDomains = selectUniResult.rows.map((row) => row.universityAddressName);
+
+    if (!allowEmailDomains.includes(email.split('@')[1])) {
+      throw new NotFoundException('이메일 주소가 학교 이메일 주소와 다릅니다.');
+    }
+
+    const randomNumber = makeRandomNumber(6);
+
+    await redis.set(`${email}-auth-number`, randomNumber);
+    await redis.expire(`${email}-auth-number`, 60 * 3);
+
+    await sendEmail(email, randomNumber);
+
+    res.status(200).send({});
+  })
+);
 
 router.delete('/', loginAuth, (req, res) => {
   res.clearCookie('token');
