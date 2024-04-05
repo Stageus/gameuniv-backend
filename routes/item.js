@@ -97,7 +97,7 @@ router.get(
   '/buy/all',
   loginAuth,
   wrapper(async (req, res) => {
-    const loginUserEmail = req.user.email;
+    const loginUser = req.user;
 
     const selectItemResult = await pgPool.query(
       `SELECT 
@@ -114,7 +114,7 @@ router.get(
         item_tb.item_idx = item_owner_tb.item_idx 
       WHERE 
         item_owner_tb.user_email = $1`,
-      [loginUserEmail]
+      [loginUser.email]
     );
     const items = selectItemResult.rows;
 
