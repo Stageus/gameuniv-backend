@@ -270,42 +270,21 @@ router.post('/pick', loginAuth, async (req, res) => {
   res.status(statusCode).send({});
 });
 
+// 아이템 찜 취소하기
 router.delete('/pick', loginAuth, async (req, res) => {
-  //from FE
   const inputItemIdx = req.query['item-idx'] || -1;
-  const loginUserEmail = req.user.email;
+  const loginUser = req.user;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
-
-  //validaion check
   if (inputItemIdx < 0) {
-    result.message = '해당 아이템은 존재하지 않습니다.';
-    statusCode = 400;
+    throw new BadRequestException('해당 아이템은 존재하지 않습니다.');
   }
 
-  //main
-  if (statusCode === 200) {
-    try {
-      //DELETE
-      const deletePickSql = 'DELETE FROM item_pick_tb WHERE user_email = $1 AND item_idx = $2';
-      const deletePickResult = await pgPool.query(deletePickSql, [loginUserEmail, inputItemIdx]);
+  await pgPool.query('DELETE FROM item_pick_tb WHERE user_email = $1 AND item_idx = $2', [
+    loginUser.email,
+    inputItemIdx,
+  ]);
 
-      if (deletePickResult.rowCount === 0) {
-        statusCode = 403;
-        result.message = '이미 찜을 하지 않았습니다.';
-      }
-    } catch (err) {
-      console.log(err);
-
-      statusCode = 409;
-      result.message = '예상하지 못한 에러가 발생했습니다.';
-    }
-  }
-
-  //send result
-  res.status(statusCode).send(result);
+  res.status(200).send({});
 });
 
 module.exports = router;
