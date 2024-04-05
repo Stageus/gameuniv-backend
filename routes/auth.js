@@ -9,7 +9,11 @@ const makeToken = require('../module/makeToken');
 const cookieConfig = require('../config/cookieConfig');
 const loginAuth = require('../middleware/loginAuth');
 const wrapper = require('../module/wrapper');
-const { ServerErrorException } = require('../module/Exception');
+const {
+  ServerErrorException,
+  BadRequestException,
+  ForbiddenException,
+} = require('../module/Exception');
 
 // 로그인 사용자 정보 가져오기
 router.get(
@@ -50,73 +54,67 @@ router.get(
   })
 );
 
-router.post('/', async (req, res) => {
-  //from FE
-  const inputId = req.body.id;
-  const inputPw = req.body.pw;
-  const autoLogin = req.body.autoLogin;
+// 로그인하기
+router.post(
+  '/',
+  wrapper(async (req, res) => {
+    const inputId = req.body.id;
+    const inputPw = req.body.pw;
+    const autoLogin = req.body.autoLogin;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
+    const selectUserResult = await pgPool.query(
+      `SELECT 
+          email, 
+          id, 
+          profile_img AS "profileImg",
+          user_name AS name, 
+          university_name AS "universityName", 
+          authority,
+          block_state AS "blockState",
+          is_delete AS "isDelete"
+      FROM 
+          user_tb 
+      JOIN
+          university_tb 
+      ON 
+          user_tb.university_idx = university_tb.university_idx 
+      WHERE 
+          id = $1 
+      AND 
+          pw = $2`,
+      [inputId, pwHash(inputPw)]
+    );
+    const user = selectUserResult.rows[0];
 
-  //main
-  try {
-    const selectUserSql = `SELECT 
-                                    email, 
-                                    id, 
-                                    profile_img, 
-                                    user_name, 
-                                    university_name, 
-                                    authority,
-                                    block_state,
-                                    is_delete
-                                FROM 
-                                    user_tb 
-                                JOIN
-                                    university_tb 
-                                ON 
-                                    user_tb.university_idx = university_tb.university_idx 
-                                WHERE 
-                                    id = $1 
-                                AND 
-                                    pw = $2
-                                `;
-    const selectUserResult = await pgPool.query(selectUserSql, [inputId, pwHash(inputPw)]);
-
-    if (selectUserResult.rows[0]?.is_delete === null) {
-      if (selectUserResult.rows[0].block_state === null) {
-        const token = makeToken(
-          {
-            email: selectUserResult.rows[0].email,
-            id: selectUserResult.rows[0].id,
-            profileImg: selectUserResult.rows[0].profile_img,
-            name: selectUserResult.rows[0].user_name,
-            universityName: selectUserResult.rows[0].university_name,
-            authority: selectUserResult.rows[0].authority,
-          },
-          autoLogin ? '48h' : '1h'
-        );
-
-        res.cookie('token', token, cookieConfig);
-      } else {
-        statusCode = 403;
-        result.message = '아이디가 정지 되었습니다.';
-      }
-    } else {
-      statusCode = 400;
-      result.message = '아이디 또는 패스워드가 잘못되었습니다.';
+    if (!user) {
+      throw new BadRequestException('아이디 또는 패스워드가 잘못되었습니다.');
     }
-  } catch (err) {
-    console.log(err);
 
-    statusCode = 409;
-    result.message = '예상하지 못한 에러가 발생했습니다.';
-  }
+    if (user.isDelete) {
+      throw new BadRequestException('아이디 또는 패스워드가 잘못되었습니다.');
+    }
 
-  //send result
-  res.status(statusCode).send(result);
-});
+    if (user.blockState) {
+      throw new ForbiddenException('정지된 계정입니다.');
+    }
+
+    const token = makeToken(
+      {
+        email: user.email,
+        id: user.id,
+        profileImg: user.profileImg,
+        name: user.name,
+        universityName: user.universityName,
+        authority: user.authority,
+      },
+      autoLogin ? '48h' : '1h'
+    );
+
+    res.cookie('token', token, cookieConfig);
+
+    res.status(200).send({});
+  })
+);
 
 router.get('/email/number', async (req, res) => {
   //from FE
