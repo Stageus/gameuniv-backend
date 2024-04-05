@@ -118,41 +118,29 @@ router.post(
   })
 );
 
-router.get('/email/number', async (req, res) => {
-  //from FE
-  const email = req.query.email;
-  const inputAuthNumber = req.query.number;
+// 이메일 인증번호 확인하기
+router.get(
+  '/email/number',
+  wrapper(async (req, res) => {
+    const email = req.query.email;
+    const inputAuthNumber = req.query.number;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
+    const authNumber = await redis.get(`${email}-auth-number`);
 
-  //main
-  if (statusCode === 200) {
-    try {
-      const authNumber = await redis.get(`${email}-auth-number`);
-
-      if (!authNumber) {
-        statusCode = 403;
-        result.message = '인증 번호가 발송되지 않았습니다.';
-      } else if (authNumber !== inputAuthNumber) {
-        statusCode = 400;
-        result.message = '인증번호가 잘못되었습니다.';
-      } else {
-        await redis.set(`certified-${email}`, 1);
-        await redis.expire(`certified-${email}`, 60 * 30);
-      }
-    } catch (err) {
-      console.log(err);
-
-      statusCode = 409;
-      result.message = '예상하지 못한 에러가 발생했습니다.';
+    if (!authNumber) {
+      throw new ForbiddenException('인증 번호가 발송되지 않았습니다.');
     }
-  }
 
-  //send result
-  res.status(statusCode).send(result);
-});
+    if (authNumber !== inputAuthNumber) {
+      throw new BadRequestException('인증번호가 잘못되었습니다.');
+    }
+
+    await redis.set(`certified-${email}`, 1);
+    await redis.expire(`certified-${email}`, 60 * 30);
+
+    res.status(200).send({});
+  })
+);
 
 router.post('/email/number', async (req, res) => {
   //from FE
