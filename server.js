@@ -23,6 +23,7 @@ const achieveApi = require('./routes/achieve');
 const tetrisApi = require('./routes/tetris');
 const blockApi = require('./routes/block');
 const adminApi = require('./routes/admin');
+const { Exception } = require('./module/Exception');
 
 //setting
 dotenv.config();
@@ -60,6 +61,18 @@ app.get((req, res) => {
 
 app.use((req, res) => {
   res.sendFile(path.join(process.env.BUILD_DIRECTORY, 'index.html'));
+});
+
+app.use((err, req, res, next) => {
+  if (err instanceof Exception) {
+    return res.status(err.status).send({
+      message: err.message,
+    });
+  }
+
+  return res.status(409).send({
+    message: '예상하지 못한 에러가 발생했습니다.',
+  });
 });
 
 //listening
