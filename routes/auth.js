@@ -46,10 +46,12 @@ router.get(
     }
 
     res.status(200).send({
-      user_name: user.user_name,
-      email: user.email,
-      profileImg: user.profile_img,
-      universityName: user.university_name,
+      data: {
+        user_name: user.user_name,
+        email: user.email,
+        profileImg: user.profile_img,
+        universityName: user.university_name,
+      },
     });
   })
 );
