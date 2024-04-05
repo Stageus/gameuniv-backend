@@ -124,32 +124,39 @@ router.get(
   })
 );
 
-router.get('/pick/all', loginAuth, async (req, res) => {
-  //from FE
-  const loginUserEmail = req.user.email;
+// 찜한 아이템 모두 가져오기
+router.get(
+  '/pick/all',
+  loginAuth,
+  wrapper(async (req, res) => {
+    const loginUser = req.user;
 
-  //to FE
-  const result = {};
-  let statusCode = 200;
+    const selectItemResult = await pgPool.query(
+      `SELECT 
+        item_pick_tb.item_idx, 
+        item_name, 
+        preview_img, 
+        detail_img, 
+        item_price 
+      FROM 
+        item_pick_tb 
+      JOIN 
+        item_tb 
+      ON 
+        item_tb.item_idx = item_pick_tb.item_idx 
+      WHERE 
+        item_pick_tb.user_email = $1 
+      ORDER BY 
+        item_pick_tb.creation_time ASC`,
+      [loginUser.email]
+    );
+    const items = selectItemResult.rows;
 
-  //main
-  try {
-    //SELECT item
-    const selectItemSql =
-      'SELECT item_pick_tb.item_idx, item_name, preview_img, detail_img, item_price FROM item_pick_tb JOIN item_tb ON item_tb.item_idx = item_pick_tb.item_idx WHERE item_pick_tb.user_email = $1 ORDER BY item_pick_tb.creation_time ASC';
-    const selectItemResult = await pgPool.query(selectItemSql, [loginUserEmail]);
-
-    result.data = selectItemResult.rows;
-  } catch (err) {
-    console.log(err);
-
-    result.message = '예상하지 못한 에러가 발생했습니다.';
-    statusCode = 409;
-  }
-
-  //send result
-  res.status(statusCode).send(result);
-});
+    res.status(200).send({
+      data: items,
+    });
+  })
+);
 
 router.post('/buy', loginAuth, async (req, res) => {
   //from FE
